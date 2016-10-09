@@ -1,3 +1,4 @@
 Test Programs
 Test 00 - Simple return statement program
-Test 00 - Simple printing (prints VIC)
+Test 01 - Simple printing (prints VIC)
+Test 02 - Simple loop using printing algorithm in Test 01
