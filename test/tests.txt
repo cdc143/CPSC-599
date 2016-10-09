@@ -3,3 +3,4 @@ Test 00 - Simple return statement program
 Test 01 - Simple printing (prints VIC)
 Test 02 - Simple loop using printing algorithm in Test 01
 Test 03 - Simple program that takes W,A,S,D keyboard input and outputs a value depending on key pressed
+Test 05 - Program that changes text, background, and border colour of VIC 20 console
