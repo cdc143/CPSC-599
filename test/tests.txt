@@ -1,2 +1,3 @@
 Test Programs
 Test 00 - Simple return statement program
+Test 00 - Simple printing (prints VIC)
