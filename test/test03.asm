@@ -15,7 +15,7 @@
  ldx #$01		 ; load 1 into x reg
 top:
   lda $00c5		 ; current key held down -> page 179 of vic20 manual
-  cmp #17		 ;a pressed
+  cmp #17		 ;a pressed - keyboard A as on page 179 (same for below values)
   beq goleft		 
   cmp #18		 ;d pressed
   beq goright		
@@ -54,21 +54,21 @@ next:
 ;that we aren't just seeing W,A,S,D being typed without the code 
 ;working.
 left:
-  lda #66		 ; B
+  lda #66		 ; ascii B
   jsr $ffd2	
   rts			 ; done
   
 right:
-  lda #69		 ; D
+  lda #69		 ; ascii D
   jsr $ffd2
   rts			 ; done
   
 up:
-  lda #88		 ; X
+  lda #88		 ; ascii X
   jsr $ffd2
   rts			 ; done
   
 down:
-  lda #84		 ; T
+  lda #84		 ; ascii T
   jsr $ffd2
   rts			 ; done
