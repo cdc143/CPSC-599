@@ -19,4 +19,3 @@ top:			 ;needs to be all the way to left, no spaces
   dex			 ; x-1
   bne top		 ; loop to top
   rts			 ; done
->>>>>>> origin/master
