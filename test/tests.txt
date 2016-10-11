@@ -11,3 +11,4 @@ test for collision detection
 test for level layout
 test for character sprite
 test sound
+simple animation
