@@ -7,12 +7,10 @@ Test 04 - Simple random number generation
 Test 05 - Program that changes text, background, and border colour of VIC 20 console
 Test 06 - Simple sound test with keyboard input TODO: Vice sound isn't working on my Windows 10 machine, please check on other machine because I have no proof that this test actually works
 Test 07 - Changing the character layout of the vic-20. We can use this for graphics or level design. By defining our own graphics characters
+Test 08 - Simple mirrored play field using characters
 
 
 TODO
 test for collision detection
-test for level layout
 test for character sprite
 test for movement of character sprite
-test sound
-simple animation
