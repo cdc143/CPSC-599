@@ -1,5 +1,5 @@
-  ;This test tests basic left/right movement
-  ; NOTE: 'Q' quit functionality stopped working on me for some reason,
+  ;This test tests basic left/right/up/down movement
+  ; (FIXED) NOTE: 'Q' quit functionality stopped working on me for some reason,
   ;so just exit the emulator once satisfied.  It's not the main focus of
   ;this test.
   
