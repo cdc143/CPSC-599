@@ -1,5 +1,5 @@
   ;This test tests basic left/right movement
-  ; NOTE: 'Q' quit functionality stopped working on me for some reason,
+  ; (FIXED) NOTE: 'Q' quit functionality stopped working on me for some reason,
   ;so just exit the emulator once satisfied.  It's not the main focus of
   ;this test.
   
@@ -60,6 +60,7 @@ next:
   ;Wait for user to press enter, and restore the character set
  pla			; pull acc from stack
  sta $9005 		; store in char mem
+ lda $00c5		 ; current key held down -> page 179 of vic20 manual
  cmp #48		 ; check if Q is pressed -> quit
  bne top		 ;continue input
  rts			 ; quit
