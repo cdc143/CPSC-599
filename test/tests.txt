@@ -8,6 +8,7 @@ Test 05 - Program that changes text, background, and border colour of VIC 20 con
 Test 06 - Simple sound test with keyboard input TODO: Vice sound isn't working on my Windows 10 machine, please check on other machine because I have no proof that this test actually works
 Test 07 - Changing the character layout of the vic-20. We can use this for graphics or level design. By defining our own graphics characters
 Test 08 - Simple mirrored play field using characters
+Test 09 - Tests basic left/right character movement, based on code from tests 03 and 07.  TODO: Up and down, but this is a start.
 
 
 TODO
