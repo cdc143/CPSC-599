@@ -157,7 +157,8 @@ updatePrevLoc:
  clc
  adc $1000
  tax
- lda #$00	 	;  @ char to signify previous move
+ lda #$00	 	;  @ char to signify previous move 
+ ;lda #32 ; store a space instead of a @
  jsr resetcollision	; check to change 'D' back to 'C'
  sta $1e00,x	; store @ in previous location
  lda #$00		; colour to black
