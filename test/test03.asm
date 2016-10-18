@@ -1,4 +1,4 @@
-  ;This test tests basic keyboard input
+  ;This test tests basic keyboard input for W,A,S,D keys.
   ;Oct 9, 2016
   processor 6502
   org $1001               ; Unexpanded VIC
@@ -13,7 +13,7 @@
 
  jsr $e55f       ; clear screen
  ldx #$01		 ; load 1 into x reg
-top:
+top:            ;input loop that keeps going until user presses 'Q'
   lda $00c5		 ; current key held down -> page 179 of vic20 manual
   cmp #17		 ;a pressed - keyboard A as on page 179 (same for below values)
   beq goleft		 
@@ -55,7 +55,7 @@ next:
 ;working.
 left:
   lda #66		 ; ascii B
-  jsr $ffd2	
+  jsr $ffd2	 ; print character to screen
   rts			 ; done
   
 right:
