@@ -1,4 +1,5 @@
   ;This tests animation of collision occurrence
+  ;This program uses W,A,S,D,Q as inputs.
   
   
   ;Oct 9, 2016
