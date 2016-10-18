@@ -1,4 +1,4 @@
-  ;This test tests basic left/right movement
+  ;This test tests basic left/right movement for A and S keys.
   ; (FIXED) NOTE: 'Q' quit functionality stopped working on me for some reason,
   ;so just exit the emulator once satisfied.  It's not the main focus of
   ;this test.
