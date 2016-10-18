@@ -1,4 +1,4 @@
-;This test tests basic sound 
+;This test tests basic sound using W,A,S,D keys for user input to choose sound.
   ; vic pages used (page 98-102, 175)
   ;Oct 9, 2016
   processor 6502
@@ -22,7 +22,7 @@
  ; $900c - high freq
  
 top:
-  ldy #$0f		 ; duration of sound (15 loops)
+  ;ldy #$0f		 ; duration of sound (15 loops)
   lda $00c5		 ; current key held down -> page 179 of vic20 manual
   cmp #17		 ;a pressed
   beq playleft		 
@@ -37,8 +37,8 @@ top:
 ;all these branches jump to their respective print-to-screen branch
 ;and then play to the branch "next"
 playleft:
-  jsr turnoff
-  jsr left
+  jsr turnoff   ; turn off previous sound
+  jsr left      ; play sound
   jmp next
   
 playright:
@@ -58,7 +58,7 @@ playdown:
 next:
   cmp #48		 ; check if Q is pressed -> quit
   bne top		 ;continue input
-  jsr turnoff
+  jsr turnoff ;turn off all sounds before exiting
   rts			 ; quit
   
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
@@ -73,24 +73,24 @@ left:
   sta $900a		 ; store sound
   ;lda #$e1			; C 225
   ;sta $900b
-  jsr timer		 ; jump to loop for duration of sound
+  ;jsr timer		 ; jump to loop for duration of sound
   rts			 ; done
   
 right:
   lda #$9f		 ; E (159)
   sta $900c			;store sound
-  jsr timer
+  ;jsr timer
   ;jsr $ffd2
   rts			 ; done
   
 up:
   lda #$af		 ; G (175)
   ;jsr $ffd2
-  sta $900a
+  sta $900a     ; store G in all registers, why not
   sta $900b
   sta $900c			 ; store sound
   
-  jsr timer
+  ;jsr timer
   rts			 ; done
   
 down:
@@ -98,14 +98,14 @@ down:
   ;jsr $ffd2
   sta $900c 	 ;store sound
   sta $900a		; have low and high sounds play
-  jsr timer
+ ; jsr timer
   rts			 ; done
   
-timer:			; plays sound for certain amount of time
-  dey
-  cpy #$00
-  bne timer
-  rts
+;timer:			; plays sound for certain amount of time
+;  dey
+;  cpy #$00
+;  bne timer
+;  rts
 turnoff:	; turn off sound for all registers
  lda #$00
  sta $900a
