@@ -43,6 +43,8 @@
  ;changes the char_colour of text -> page 173 vic manual
  
 gameLoopTop:
+ lda #$5f		; arbitrary number for timer
+ jsr timerLoop
  ;Setup new location for characters
  jsr $e55f       		; clear screen
  lda char_colour		; load new char_colour to acc
@@ -118,6 +120,7 @@ initEnemyLocation:
   sta graphics_bot,x
   sta graphics_top,x
   lda char_colour
+  adc #$30
   sta char_colour_loc_top,x
   sta char_colour_loc_bot,x
   dey 
@@ -132,7 +135,7 @@ initChars:
  lda #$0b
  sta col		; col
  jsr getRandom
- and #$00
+ and #$03
  tay
  jsr initEnemyLocation
  jsr getRowColForm
@@ -598,7 +601,7 @@ compareCollUp:
  cmp enemy_sprite
  beq collRet
  ldx col
- cpx col_begin
+ cpx col_end
  beq collRet
  inc col
  rts
@@ -622,7 +625,7 @@ compareCollDown:
  cmp enemy_sprite
  beq collRet
  ldx col
- cpx col_end
+ cpx col_begin
  dec col
  rts
 
