@@ -6,9 +6,9 @@
 ;over them
 ;player runs over walls on bottom; TODO: collision detection
 
-;Things added: lives at top left 
+;Things added: lives at top left
 ;lost lives if collide with enemy (circle)
-;changed icon of characters 
+;changed icon of characters
 ;ability to reset game if F1 pressed
 ;die after run out of lives
 ;character is moving around bottom, super duper glitchy and not well implemented
@@ -18,15 +18,15 @@
 ;fix collision detection for bottom
 ;using the carry bit for movement up and down
 ;make a game loop -> character moves, enemy moves, ...
-;dasm -> header for smaller files? 
 ;macros
-  
+
   ;Oct 24, 2016
  processor 6502
  org $1001              ; Unexpanded VIC
- 
+ include "defs.h"
+
 ;ctrl to attack
- 
+
  ; BASIC stub (unexpanded vic)
  dc.w $100b            ; Pointer to next BASIC line
  dc.w 1981               ; BASIC Line#
@@ -36,10 +36,11 @@
  dc.w 0                  ; End of BASIC program
  lda #$0f		 ; 15
  sta $900e		; set sound bits/turn on volume (see)
- 
+
 gameLoopTop:
    ;Setup new location for characters
  jsr $e55f       ; clear screen
+
 
 ;changes the char_colour of text -> page 173 vic manual
  lda $0286
@@ -51,12 +52,12 @@ gameLoopTop:
  lda screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 ; store in screen and border register
  ldx #$0
- 
+
 loadLevel:
  lda level1,x
  sta $1e00,x	; store space
  lda wall_colour		; char_colour to black
- sta $9600,x	; store char_colour in new location too 
+ sta $9600,x	; store char_colour in new location too
  ;jsr $ffd2
  inx
  cpx #level1end-level1
@@ -67,16 +68,16 @@ loop2:
  ;jsr $ffd2
  sta $1f1e,y	; store space
  lda wall_colour		; char_colour to black
- sta $971e,y	; store char_colour in new location too 
+ sta $971e,y	; store char_colour in new location too
  dey
  cpy level1
  bne loop2
  ldx #$03
  stx lives
- 
+
 drawLives:		;draw lives to screen
  lda lives_sprite
- sta $1e00,x		
+ sta $1e00,x
  lda char_colour
  sta $9600,x
  dex
@@ -89,7 +90,7 @@ drawLives:		;draw lives to screen
  ora #$0f		; set character memory (bits 0-3)
  sta $9005 		; store result
  bne initChars	; just a branch always over
- 
+
 gameOver: ;
 ;TODO: Print "Game over"
  ;jsr $e55f
@@ -101,13 +102,13 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp #48 ;quit
  beq quit
  cmp #39 ;f1 to restart
- beq gameLoopTop	
+ beq gameLoopTop
  bne gameOverEnd
- 
+
 initChars:
  ldy enemy_sprite		; 'C' for collision
  sty $1e76		; store in the middle of the second row
- lda #$00	
+ lda #$00
  sta row		; row
  sta col_bot
  lda #$0b
@@ -121,9 +122,9 @@ initChars:
  sta $9600,x		; char char_colour
  pla			; pull acc from stack
  sta $9005		; store in char memory
- 
-  ; screen registers 1e00-1fff -> 7680-8191 -> 511 
-  
+
+  ; screen registers 1e00-1fff -> 7680-8191 -> 511
+
 top:			; top of loop
  lda #$00
  sta $900b			 ; store sound
@@ -134,21 +135,21 @@ top:			; top of loop
  cmp #39 ;f1 to restart
  beq gameOverEnd	;bounce to game over to take us to gameLoopTop
  cmp #17		 ;a pressed
- beq playleft	 ; move left	 
+ beq playleft	 ; move left
  cmp #18		 ;d pressed
- beq playright	 ; move right		
+ beq playright	 ; move right
  cmp #9		 ;w pressed
- beq playup		
+ beq playup
  cmp #41		 ;s pressed
- beq playdown		
+ beq playdown
 ; cmp #33
 ; beq attack
  bne next		 ; neither pressed
-  
+
 playleft:
  jsr left		 ; subroutine to move left
  jmp next
-  
+
 playright:
  jsr right		; subroutine to move right
  jmp next
@@ -156,10 +157,10 @@ playright:
 playup:
  jsr up
  jmp next
- 
+
 playdown:
  jsr down
- 
+
 next:
   ;Wait for user to press enter, and restore the character set
  pla			; pull acc from stack
@@ -172,16 +173,16 @@ quit:
  sta $0286
  jsr $e55f       ; clear screen before exiting
  brk			 ; quit
-  
+
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
-;that we aren't just seeing W,A,S,D being typed without the code 
+;that we aren't just seeing W,A,S,D being typed without the code
 ;working.
 attack:
  lda #$87		 ; f# (175)
   ;jsr $ffd2
  sta $900b			 ; store sound
  rts
- 
+
 left:
  ldx col_bot		; check if player is in bottom half of screen
  cpx #$00		;reg is 0 if player isn't in bottom half
@@ -191,10 +192,10 @@ left:
  beq updateNewLocBounce	; don't move character because it is at end of left screen
  clc			;clear carry, not in bottom half
  jsr updatePrevLoc
- 
+
  dec row		; rows -1
  jmp updateNewLocBounce
- 
+
 right:
  ldx col_bot		; check if player is in bottom half of screen
  cpx #$00
@@ -206,7 +207,7 @@ right:
  jsr updatePrevLoc
  inc row 		 ; rows +1
  jmp updateNewLocBounce
- 
+
 leftBot:
  ldx row
  cpx #$00		 ; check if x =21 (end of right)
@@ -224,8 +225,8 @@ rightBot:
  jsr updatePrevLoc
  inc row 		 ; rows +1
  jmp updateNewLocBot	;update location on bottom
- 
- 
+
+
 updateNewLocBounce:	;fix branch out of range
  jmp updateNewLoc
 
@@ -268,35 +269,35 @@ downBot:
  jsr updatePrevLoc
  inc col_bot ; move down
  jmp updateNewLocBot
- 
+
 updateNewLoc:
  jsr getRowColForm
  jsr collision	; collision detection
  rts			; return
-  
+
 updateNewLocBot:
  jsr getRowColFormBot	;get row/col for bottom half
  lda p1_sprite		;player character
  sta $1f00,x	; store space
  lda char_colour		; char_colour to black
- sta $9700,x	; store char_colour in new location too 
+ sta char_colour_loc,x	; store char_colour in new location too
  jsr timerLoop
  rts
- 
+
 gameOverBounce:	;just to fix branch out of range
  jmp gameOver
- 
+
 updatePrevLoc:
  bcs prevBot		;check if character is on bottom
  jsr getRowColForm
- bcs lastRowTop		
- lda #32	 	;  space 
+ bcs lastRowTop
+ lda #32	 	;  space
  jsr drawToScreen
- rts 
- 
+ rts
+
  ;Note: also need to check for border from top to bottom:
  ;if bottom register =1 and 1004 (key pressed) is down, then
- ;draw top 
+ ;draw top
 prevBot:
  jsr getRowColFormBot	;bottom half of screen
 lastRowTop:
@@ -304,7 +305,7 @@ lastRowTop:
  jsr drawToScreenBot	;draw space over previous move
 prevLocNext:
  rts
- 
+
 getRowColForm:		;get coord in row +column
  ldy #$00
  ldx col
@@ -314,7 +315,7 @@ getRowColForm:		;get coord in row +column
  adc row
  tax
  rts
- 
+
 getRowColFormBot:		;get coord in row +column for bototm
  ldy #$00
  ldx col_bot			;1009 instead of 1007 b/c bottom
@@ -325,14 +326,14 @@ getRowColFormBot:		;get coord in row +column for bototm
  sbc #$0d		;subtract 13 to account for rows starting in middle for bottom half
  tax
  rts
- 
+
 addCols:		;converts to row spacing
  cpx #$00
  beq colsnext
  tya
  clc
  adc #$16		; amount of spaces it takes to get to row below
- tay			
+ tay
  dex 			; decrement number of rows left
  cpx #$00
  bne addCols
@@ -358,8 +359,8 @@ drawcoll:
  jsr drawCharacter
 collisionBottom:
  rts
- 
-loseLife:			;player dies 
+
+loseLife:			;player dies
  lda #32
  ldx lives
  jsr drawTop
@@ -384,7 +385,7 @@ drawCharacter:
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
- 
+
 drawBottom:
  ;ldy #$01
  ;sty p1_sprite			;set bottom bit
@@ -392,8 +393,8 @@ drawBottom:
  ldy #$00
  ldx col
  jsr addCols
- tya 
- clc 
+ tya
+ clc
  adc row
  ;sbc #$0d		;subtract 13
  tax
@@ -402,7 +403,7 @@ drawBottom:
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
- 
+
 drawTop:
  jsr drawToScreen
  lda #$4f		; arbitrary number for timer
@@ -414,24 +415,24 @@ drawTop:
 ; bne resetcollbot
 ; lda enemy_sprite 		; ;load 'C' into reg if D is char'
 ; jsr drawToScreen
-;resetcollbot: 
+;resetcollbot:
 ; rts
- 
+
 drawToScreen:
  sta $1e00,x	; store space
  lda char_colour		; char_colour to black
- sta $9600,x	; store char_colour in new location too 
+ sta $9600,x	; store char_colour in new location too
  rts
- 
+
 drawToScreenBot:
  sta $1f00,x	; store space
  lda char_colour		; char_colour to black
- sta $9700,x	; store char_colour in new location too 
+ sta char_colour_loc,x	; store char_colour in new location too
  rts
- 
+
 collAnimationLoop:
  jsr collMovementCheck
- jsr collisionAnimation 
+ jsr collisionAnimation
  lda #32
  jsr drawToScreen
  dec coll_char_colour
@@ -442,7 +443,7 @@ collAnimationLoop:
  bne collAnimationLoop
 doneCollAnimLoop:
  rts
- 
+
 collisionAnimation:
  ldy #$00
  ldx col
@@ -450,7 +451,7 @@ collisionAnimation:
  tya
  clc
  adc row
- tax 
+ tax
  lda p1_sprite
  sta $1e00,x	; store in new index
  lda coll_char_colour		    ; char_colour
@@ -462,28 +463,28 @@ collisionAnimation:
 collMovementCheck:
  lda current_key		 ; current key held down -> page 179 of vic20 manual
  cmp #17		 ;a pressed
- beq collLeft	 ; move left	
+ beq collLeft	 ; move left
 
  cmp #18		 ;d pressed
  ;beq playright	 ; move right
  beq collRight
  cmp #9	 ;w pressed
  beq collUp
- ;beq playup		
+ ;beq playup
  cmp #41		 ;s pressed
  beq collDown
  bne collRight ;default
- 
+
 
 collLeft:
  ;ldx row
  ldy #$00
  ldx col
  jsr addCols
- tya 
- clc 
+ tya
+ clc
  adc row
- 
+
  ;sbc #$0d		;subtract 13
  tax
  inx
@@ -498,10 +499,10 @@ collRight:
  ldy #$00
  ldx col
  jsr addCols
- tya 
- clc 
+ tya
+ clc
  adc row
- 
+
  ;sbc #$0d		;subtract 13
  tax
  dex
@@ -512,14 +513,14 @@ collRight:
  dex
  stx row
  rts
- 
+
 collUp:
  ldy #$00
  ldx col
  inx
  jsr addCols
- tya 
- clc 
+ tya
+ clc
  adc row
  ;sbc #$0d		;subtract 13
  tax
@@ -535,10 +536,10 @@ collDown:
  ldx col
  dex
  jsr addCols
- tya 
- clc 
+ tya
+ clc
  adc row
- 
+
  ;sbc #$0d		;subtract 13
  tax
  lda $1e00,x
@@ -550,20 +551,20 @@ collDown:
  rts
 collRet:
  rts
- 
+
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
  ldy #$ff		 ; 255 (basically the biggest number possible)
  jsr timer		 ; jump to timer loop
- sbc #$01		 ; acc - 1 
+ sbc #$01		 ; acc - 1
  bpl timerLoop   ; branch if positive (N not set)
  rts			 ; N set, return
- 
+
 timer:
  dey			 ; y-1
  cpy #$00		 ; check if y=0
  bne timer		 ; if not, loop
  rts			 ; return
- 
+
 
 
 
