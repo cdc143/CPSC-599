@@ -656,7 +656,8 @@ s:					dc.b #41
 d:					dc.b #18
 q:					dc.b #48
 f1:					dc.b #39
-p1_sprite:			dc.b #81
+p1_sprite:			dc.b #81		;81 = circle
 lives_sprite:		dc.b #83		;heart
 enemy_sprite:		dc.b #87		;circle
 wall_sprite:		dc.b $66		;weird checkered square thingy
+portal_sprite:		dc.b #209
