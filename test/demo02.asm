@@ -171,7 +171,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp f1 ;f1 to restart
  beq gameLoopTopBounce	
  bne gameOverEnd
- gameLoopTopBounce:
+gameLoopTopBounce:
  jmp gameLoopTop
  
 initEnemyLocation:
