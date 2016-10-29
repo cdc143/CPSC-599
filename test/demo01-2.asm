@@ -59,6 +59,11 @@ gameLoopTop:
  stx lives
  jmp drawLives
  
+ 
+; loads level 1
+; loading a level overwrites the A and X registers at the moment
+; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
+
 loadLevel1:
  ldx #$00
 loadLevel1Loop1:
@@ -75,6 +80,8 @@ loadLevel1Loop2:
  cpx #level1bottomend-level1bottom
  bne loadLevel1Loop2
  rts
+
+ ; loads level 2
 
 loadLevel2:
  ldx #$00
@@ -93,6 +100,8 @@ loadLevel2Loop2:
  bne loadLevel2Loop2
  rts
  
+ ; loads level 3
+
 loadLevel3:
  ldx #$00
 loadLevel3Loop1:
@@ -110,6 +119,8 @@ loadLevel3Loop2:
  bne loadLevel3Loop2
  rts
  
+ ; loads level 4
+
 loadLevel4:
  ldx #$00
 loadLevel4Loop1:
