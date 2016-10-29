@@ -171,7 +171,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp f1 ;f1 to restart
  beq gameLoopTopBounce	
  bne gameOverEnd
-game LoopTopBounce:
+gameLoopTopBounce:
  jmp gameLoopTop
  
 initEnemyLocation:
@@ -192,7 +192,7 @@ initEnemyLocation:
   rts
  
 initChars:
- lda #$00	
+ lda #$01	
  sta row		; row
  sta col_bot
  lda #$0b
