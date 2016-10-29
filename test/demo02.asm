@@ -469,6 +469,8 @@ collision_bot:
  ldy graphics_bot,x	; load current char
  cpy wall_sprite		; check if is # (wall)
  beq drawcoll_bot
+ cpy portal_sprite
+ beq portalAnimation
  cpy enemy_sprite			; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
@@ -481,6 +483,7 @@ drawcoll_bot:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
+
  
 loseLife:			;player dies 
  lda space_sprite
@@ -492,6 +495,23 @@ loseLife:			;player dies
  bmi gameOverBounce
  rts
 
+portalAnimation:
+ jsr $e55f
+ lda screen_colour
+ sta temp_colour
+ ldx #$08
+portalAnimTop:
+ lda temp_colour
+ sta $900f		 		; store in screen and border register
+ adc #$33
+ sta temp_colour
+ lda #$4f
+ jsr timerLoop
+ dex
+ cpx #$00
+ bne portalAnimTop
+ jmp gameLoopTop
+ 
 drawCharacter:
  ldy col_bot
  cpy #$01
@@ -706,6 +726,14 @@ addColsAndTransfY:
  tax
  rts
 
+timerLoopLoop:
+ lda #$4f
+ jsr timerLoop
+ dec timer_loop
+ cmp #$00
+ bne timerLoopLoop
+ rts
+ 
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
  ldy #$ff		 ; 255 (basically the biggest number possible)
  jsr timer		 ; jump to timer loop
@@ -833,15 +861,18 @@ row:				dc.b 0
 col:				dc.b 0
 col_bot:			dc.b 0
 coll_loop_count:	dc.b 0
+portal_counter:		dc.b 0
 init_lives:			dc.b #$08
 lives:				dc.b 0
 current_key:		dc.b 0
 inventory:			dc.b 0
 pi_weapon:			dc.b #94
+temp_colour:		dc.b 0
 char_colour:		dc.b #$55
 wall_colour:		dc.b #$44
 life_colour:		dc.b 2
 screen_colour:		dc.b #$0f
+timer_loop:			dc.b 0
 coll_char_colour:	dc.b 0
 w:					dc.b #9
 a:					dc.b #17
@@ -853,7 +884,7 @@ p1_sprite:			dc.b #81		;81 = circle
 lives_sprite:		dc.b #83		;heart
 enemy_sprite:		dc.b #87		;circle
 wall_sprite:		dc.b $66		;weird checkered square thingy
-portal_sprite:		dc.b #209
+portal_sprite:		dc.b $7F ;#209
 space_sprite:		dc.b #32
 row_begin:			dc.b #$00
 row_mid_left:		dc.b #$0f
