@@ -59,7 +59,6 @@ gameLoopTop:
  stx lives
  jmp drawLives
  
- 
 ; loads level 1
 ; loading a level overwrites the A and X registers at the moment
 ; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
@@ -81,7 +80,7 @@ loadLevel1Loop2:
  bne loadLevel1Loop2
  rts
 
- ; loads level 2
+; loads level 2
 
 loadLevel2:
  ldx #$00
@@ -100,7 +99,7 @@ loadLevel2Loop2:
  bne loadLevel2Loop2
  rts
  
- ; loads level 3
+; loads level 3
 
 loadLevel3:
  ldx #$00
@@ -119,7 +118,7 @@ loadLevel3Loop2:
  bne loadLevel3Loop2
  rts
  
- ; loads level 4
+; loads level 4
 
 loadLevel4:
  ldx #$00
@@ -137,6 +136,9 @@ loadLevel4Loop2:
  cpx #level4bottomend-level4bottom
  bne loadLevel4Loop2
  rts
+ 
+gameLoopTopBounce:
+ jmp gameLoopTop
  
 drawLives:		;draw lives to screen
  lda lives_sprite
@@ -170,7 +172,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp q ;quit
  beq quitBounce
  cmp f1 ;f1 to restart
- beq gameLoopTop	
+ beq gameLoopTopBounce	
  bne gameOverEnd
  
 initEnemyLocation:
