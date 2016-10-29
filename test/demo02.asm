@@ -171,7 +171,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp f1 ;f1 to restart
  beq gameLoopTopBounce	
  bne gameOverEnd
-gameLoopTopBounce:
+game LoopTopBounce:
  jmp gameLoopTop
  
 initEnemyLocation:
@@ -203,7 +203,7 @@ initChars:
  jsr initEnemyLocation
  jsr getRowColForm
  lda p1_sprite		; 'B'
- sta graphics_top,x		; store far left second row
+ sta graphics_top,x	; store far left second row
  lda char_colour		;black/initializing character location on row (just convenience that it's also black)
  sta char_colour_loc_top,x		; char char_colour
  pla			; pull acc from stack
