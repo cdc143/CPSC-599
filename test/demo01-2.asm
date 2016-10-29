@@ -193,17 +193,17 @@ initEnemyLocation:
   rts
  
 initChars:
- lda #$00	
+ lda #$00			;initial row location
  sta row		; row
  sta col_bot
- lda #$0b
+ lda #$0b		;initial column location
  sta col		; col
  jsr getRandom
  and #$03
  tay
- jsr initEnemyLocation
- jsr getRowColForm
- lda p1_sprite		; 'B'
+ jsr initEnemyLocation	;place enemies on board
+ jsr getRowColForm		;get coordinates for player
+ lda p1_sprite		; this is where character gets initially drawn to screen
  sta graphics_top,x		; store far left second row
  lda char_colour		;black/initializing character location on row (just convenience that it's also black)
  sta char_colour_loc_top,x		; char char_colour
