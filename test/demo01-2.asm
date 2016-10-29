@@ -64,15 +64,15 @@ gameLoopTop:
 ; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
 
 loadLevel1:
- ldx #$00
-loadLevel1Loop1:
- lda level1top,x
- jsr $ffd2
- inx
- cpx #level1topend-level1top
- bne loadLevel1Loop1
- ldx #$00
-loadLevel1Loop2:
+ ldx #$00					; reset x to use as a loop counter
+loadLevel1Loop1:       ; loop that loads the top half of the level
+ lda level1top,x          ; load the character from the x offset of the map
+ jsr $ffd2                   ; print to screen
+ inx                           ; increment x
+ cpx #level1topend-level1top           ; check to see if all of the top half has been loaded
+ bne loadLevel1Loop1                      ; branch back to the top of the loop if it hasnt finished yet
+ ldx #$00					; reset x to use as a loop counter
+loadLevel1Loop2:       ; loop that loads the bottom half of the level
  lda level1bottom,x
  jsr $ffd2
  inx
