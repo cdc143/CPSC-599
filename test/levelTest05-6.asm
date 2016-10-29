@@ -93,8 +93,7 @@ drawLives:		;draw lives to screen
  bne initChars	; just a branch always over
 
 getRandom:
- lda #$00 ;clear the accumulator
- adc seed
+ lda seed
  adc $9003 ;add random number from raster memory (can change this to somewhere else if needed)
  sta seed
  rts 
@@ -117,6 +116,8 @@ initEnemyLocation:
   jsr getRandom
   tax 
   lda enemy_sprite
+  ;lda graphics_bot,x  TODO: collision detections
+
   sta graphics_bot,x
   sta graphics_top,x
   lda char_colour
