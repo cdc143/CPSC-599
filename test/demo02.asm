@@ -53,7 +53,9 @@ gameLoopTop:
 ;changes the border and background char_colour -> page 175 of vic do manual
  lda screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
- ldx #$0
+ ldx #$03
+ stx current_room
+ ldx #$00
  jsr loadLevel3
  ldx init_lives
  stx lives
@@ -483,7 +485,6 @@ drawcoll_bot:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
-
  
 loseLife:			;player dies 
  lda space_sprite
@@ -826,8 +827,9 @@ level3bottom:
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
+  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
+  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 level3bottomend
 
 level4top:
@@ -852,46 +854,48 @@ level4bottom:
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
-  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$A6
+  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
+  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
+  dc.b $a6,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$a6
   dc.b $a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 level4bottomend
 
-row:				dc.b 0
-col:				dc.b 0
-col_bot:			dc.b 0
-coll_loop_count:	dc.b 0
+row:						dc.b 0
+col:						dc.b 0
+col_bot:				dc.b 0
+coll_loop_count:		dc.b 0
 portal_counter:		dc.b 0
-init_lives:			dc.b #$08
-lives:				dc.b 0
-current_key:		dc.b 0
-inventory:			dc.b 0
+init_lives:				dc.b #$08
+lives:					dc.b 0
+current_key:			dc.b 0
+inventory:				dc.b 0
 pi_weapon:			dc.b #94
-temp_colour:		dc.b 0
-char_colour:		dc.b #$55
-wall_colour:		dc.b #$44
-life_colour:		dc.b 2
+temp_colour:			dc.b 0
+char_colour:			dc.b #$55
+wall_colour:			dc.b #$44
+life_colour:			dc.b 2
 screen_colour:		dc.b #$0f
 timer_loop:			dc.b 0
 coll_char_colour:	dc.b 0
-w:					dc.b #9
-a:					dc.b #17
-s:					dc.b #41
-d:					dc.b #18
-q:					dc.b #48
-f1:					dc.b #39
-p1_sprite:			dc.b #81		;81 = circle
-lives_sprite:		dc.b #83		;heart
+w:						dc.b #9
+a:							dc.b #17
+s:							dc.b #41
+d:							dc.b #18
+q:							dc.b #48
+f1:						dc.b #39
+p1_sprite:				dc.b #81		;81 = circle
+lives_sprite:			dc.b #83		;heart
 enemy_sprite:		dc.b #87		;circle
-wall_sprite:		dc.b $66		;weird checkered square thingy
-portal_sprite:		dc.b $7F ;#209
-space_sprite:		dc.b #32
+wall_sprite:			dc.b $66		;weird checkered square thingy
+portal_sprite:			dc.b $7F 		;#209
+space_sprite:			dc.b #32
 row_begin:			dc.b #$00
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
-row_end:			dc.b #$15
-col_begin:			dc.b #$00
+row_end:				dc.b #$15
+col_begin:				dc.b #$00
 col_mid_down:		dc.b #$0b
 col_mid_up:			dc.b #$0d
-col_end:			dc.b #$16	
-seed:				dc.b #74 ;constant seed	
+col_end:				dc.b #$16	
+seed:					dc.b #74 ;constant seed
+current_room:		dc.b 0
