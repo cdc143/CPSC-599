@@ -122,7 +122,7 @@ loadLevel3Loop1:
  lda level3top,x
  sta graphics_top,x
  lda wall_colour
- sta char_colour_loc_top,x 
+ sta char_colour_loc_top,x
  inx
  cpx #level3topend-level3top
  bne loadLevel3Loop1
@@ -478,6 +478,10 @@ collision:		 ; detect collision between B and C
  ldy graphics_top,x	; load current char
  cpy wall_sprite	; check if is # (wall)
  beq drawcoll
+ cpy #$5b
+ bne drawCharacter1
+ jsr loadNewLevel
+drawCharacter1:
  cpy enemy_sprite		; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
@@ -490,6 +494,7 @@ drawcoll:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
+
 
 collision_bot:
  ldy graphics_bot,x	; load current char
@@ -517,7 +522,7 @@ loseLife:			;player dies
  dec lives
  lda lives
  cmp #$00
- bmi gameOverBounce
+ ;bmi gameOverBounce
  rts
 
 portalAnimation:
@@ -581,7 +586,7 @@ drawToScreenBot:
  lda char_colour		; char_colour to black
  sta char_colour_loc_bot,x	; store char_colour in new location too
  rts
- 
+
 collAnimationLoop:
  jsr collMovementCheck
  jsr checkColBot
@@ -609,7 +614,7 @@ checkColBot:
  bmi col_bot_set_0
  beq checkColMid
  bpl col_bot_set_1
- 
+
 checkColMid:
  lda row
  ldx current_key
@@ -620,10 +625,10 @@ checkColMid:
  lda col
  cpx w
  beq checkUpColBot
- cpx s 
+ cpx s
  beq checkDownColBot
  rts
- 
+
 checkLeftColBot:	;animation moves right
  cmp row_mid_right
  bmi col_bot_set_0
@@ -648,7 +653,7 @@ col_bot_set_0:
  lda #$00
  sta col_bot
  rts
- 
+
 collisionAnimation:
  jsr getXCoord
  lda p1_sprite
@@ -818,6 +823,24 @@ timer:
  bne timer		 ; if not, loop
  rts			 ; return
 
+loadNewLevel:
+  lda col
+  cmp col_end
+  bne check2 ;you've walked through the right door
+  inc current_room
+  jsr loadLevel4
+  rts
+check2:
+  lda #$01
+  cmp row
+  bne check3
+  lda $02
+  adc current_room
+  jsr loadLevel2 ;you walked through the top door
+  rts
+check3:
+  rts
+
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
 level1top:
@@ -878,7 +901,7 @@ level2bottomend
 
 level3top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -892,7 +915,7 @@ level3topend
 
 level3bottom:
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$5b
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$7f,$20,$20,$20,$20,$66
@@ -906,7 +929,7 @@ level3bottomend
 
 level4top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -919,7 +942,7 @@ level4top:
 level4topend
 
 level4bottom:
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $5b,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
@@ -971,3 +994,4 @@ col_mid_up:			dc.b #$0d
 col_end:				dc.b #$16
 seed:					dc.b #74 ;constant seed
 current_room:		dc.b 0
+levelcounter:  dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
