@@ -1,5 +1,8 @@
 ;Test 02 for level
 
+;this file is just mucking around with demo02-1 to figure out why changing rooms isn't happening when going to end of screen.
+;Didn't want to screw up demo02-1 so I created a different file.
+
 ;Enimies no longer spawn outside of playfield
 ;Changed the way playfield is put into memory. Makes collision detection WAYY easier
 ;Seems to have broken most coloring code
