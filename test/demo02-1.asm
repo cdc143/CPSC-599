@@ -60,7 +60,15 @@ gameLoopTop:
  sta $900f		 		; store in screen and border register
  ldx #$03
  stx current_room
- ldx #$00
+ ldx #$00 ;              2  1
+ lda #$03 ;Map layout is 3  4
+ sta rooms
+ lda $04
+ sta rooms+1
+ lda $02
+ sta rooms+2
+ lda $01
+ sta rooms+3
  jsr loadLevel3
  ldx init_lives
  stx lives
@@ -828,7 +836,7 @@ loadNewLevel:
   cmp col_end
   bne check2 ;you've walked through the right door
   inc current_room
-  jsr loadLevel4
+  jsr levelDispatch
   rts
 check2:
   lda #$01
@@ -836,9 +844,17 @@ check2:
   bne check3
   lda $02
   adc current_room
-  jsr loadLevel2 ;you walked through the top door
+  jsr levelDispatch ;you walked through the top door
   rts
 check3:
+  rts
+
+levelDispatch:
+  lda rooms+current_room
+  cmp #$04
+  bne checkNext
+  jsr loadLevel4
+checkNext:
   rts
 
  ;changed all the $a6 to $66 because the character changes depending on whether
@@ -994,4 +1010,4 @@ col_mid_up:			dc.b #$0d
 col_end:				dc.b #$16
 seed:					dc.b #74 ;constant seed
 current_room:		dc.b 0
-levelcounter:  dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+rooms:  dc.b 0,0,0,0,0,0,0,0
