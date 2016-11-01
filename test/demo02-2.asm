@@ -42,7 +42,7 @@
  dc.b $34,$31,$30,$39    ; 4109 (ML start)
  dc.b 0                  ; End of BASIC line
  dc.w 0                  ; End of BASIC program
- 
+
  lda #$0f		 ; 15
  sta $900e		; set sound bits/turn on volume (see)
  ;changes the char_colour of text -> page 173 vic manual
@@ -61,8 +61,20 @@ gameLoopTop:
  ;ldx #$03
  ;stx current_room
  ldx #$00
- jsr loadLevel
- ;jsr loadLevel3
+ ;jsr loadLevel
+ ldy #$00
+ lda #$03
+ sta rooms,y
+ iny
+ lda #$04
+ sta rooms,y
+ iny
+ lda #$02
+ sta rooms,y
+ iny
+ lda #$01
+ sta rooms,y
+ jsr loadLevel3
  ldx init_lives
  stx lives
  jmp drawLives
@@ -73,17 +85,14 @@ gameLoopTop:
 loadLevel:	;loads a level based on random number generator
  jsr getRandom
  and #$03	;option of 4 rooms at moment
- sta current_room
+ ;sta current_room
  jsr loadLevel1
  jsr loadLevel2
  jsr loadLevel3
  jsr loadLevel4
  rts
- 
+
 loadLevel1:		;default room for now
- lda current_room
- cmp #$00		;if room is level 2 room
- bne loadLevel1End
  ldx #$00					; reset x to use as a loop counter
 loadLevel1Loop1:       ; loop that loads the top half of the level
  lda level1top,x          ; load the character from the x offset of the map
@@ -108,9 +117,6 @@ loadLevel1End:
 ; loads level 2
 
 loadLevel2:
- lda current_room
- cmp #$01
- bne loadLevel2End
  ldx #$00
 loadLevel2Loop1:
  lda level2top,x
@@ -135,15 +141,12 @@ loadLevel2End:
 ; loads level 3
 
 loadLevel3:
- lda current_room
- cmp #$02
- bne loadLevel3End
  ldx #$0
 loadLevel3Loop1:
  lda level3top,x
  sta graphics_top,x
  lda wall_colour
- sta char_colour_loc_top,x 
+ sta char_colour_loc_top,x
  inx
  cpx #level3topend-level3top
  bne loadLevel3Loop1
@@ -162,9 +165,6 @@ loadLevel3End:
 ; loads level 4
 
 loadLevel4:
- lda current_room
- cmp #$03
- bne loadLevel4End
  ldx #$00
 loadLevel4Loop1:
  lda level4top,x
@@ -505,6 +505,10 @@ collision:		 ; detect collision between B and C
  ldy graphics_top,x	; load current char
  cpy wall_sprite	; check if is # (wall)
  beq drawcoll
+ cpy door_sprite
+ bne checkEnemy
+ jsr loadNewLevel
+checkEnemy:
  cpy enemy_sprite		; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
@@ -608,7 +612,7 @@ drawToScreenBot:
  lda char_colour		; char_colour to black
  sta char_colour_loc_bot,x	; store char_colour in new location too
  rts
- 
+
 collAnimationLoop:
  jsr collMovementCheck
  jsr checkColBot
@@ -636,7 +640,7 @@ checkColBot:
  bmi col_bot_set_0
  beq checkColMid
  bpl col_bot_set_1
- 
+
 checkColMid:
  lda row
  ldx current_key
@@ -647,10 +651,10 @@ checkColMid:
  lda col
  cpx w
  beq checkUpColBot
- cpx s 
+ cpx s
  beq checkDownColBot
  rts
- 
+
 checkLeftColBot:	;animation moves right
  cmp row_mid_right
  bmi col_bot_set_0
@@ -675,7 +679,7 @@ col_bot_set_0:
  lda #$00
  sta col_bot
  rts
- 
+
 collisionAnimation:
  jsr getXCoord
  lda p1_sprite
@@ -845,6 +849,53 @@ timer:
  bne timer		 ; if not, loop
  rts			 ; return
 
+loadNewLevel:
+  lda row
+  cmp row_begin
+  bne checkright
+  inc current_room
+  inc current_room
+  lda current_room
+  jsr levelDispatch
+  rts
+checkright:
+  lda col
+  cmp col_mid
+  bne checkbottom
+  inc current_room
+  jsr levelDispatch
+  rts
+checkbottom:
+  brk
+  lda row
+  sta $1000
+  brk
+  rts
+levelDispatch:
+  ldy current_room
+  lda rooms,y
+  cmp #$01
+  bne check3
+  jsr loadLevel1
+  rts
+check3:
+  cmp #$02
+  bne check4
+  jsr loadLevel2
+  rts
+check4:
+  cmp #$03
+  bne check5
+  jsr loadLevel3
+  rts
+check5:
+  cmp #$04
+  bne check6
+  jsr loadLevel4
+  rts
+check6:
+  rts
+
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
 level1top:
@@ -898,14 +949,14 @@ level2bottom:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 level2bottomend
 
 level3top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -918,7 +969,7 @@ level3top:
 level3topend
 
 level3bottom:
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$5b
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -946,7 +997,7 @@ level4top:
 level4topend
 
 level4bottom:
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $5b,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
@@ -988,7 +1039,7 @@ enemy_sprite:		dc.b #87		;circle
 wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
-row_begin:			dc.b #$00
+row_begin:			dc.b #$0a
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
 row_end:				dc.b #$15
@@ -998,5 +1049,7 @@ col_mid_up:			dc.b #$0d
 col_end:				dc.b #$16
 seed:					dc.b #$74 ;constant seed
 current_room:		dc.b 0
+rooms:          dc.b 0,0,0,0
 draw_num_enemies:	dc.b 0
-
+door_sprite       dc.b $5b
+col_mid           dc.b #$0a
