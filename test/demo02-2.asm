@@ -851,7 +851,7 @@ timer:
 
 loadNewLevel:
   lda row
-  cmp row_begin
+  cmp row_newLevel_begin
   bne checkright
   inc current_room
   inc current_room
@@ -1039,7 +1039,8 @@ enemy_sprite:		dc.b #87		;circle
 wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
-row_begin:			dc.b #$0a
+row_begin:			dc.b #$00
+row_newLevel_begin: dc.b #$0a
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
 row_end:				dc.b #$15
