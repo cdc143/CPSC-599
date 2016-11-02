@@ -837,7 +837,9 @@ loadNewLevel:
   bne checkright
   inc current_room
   inc current_room
-  lda current_room
+  lda col_newLevel_end
+  sta col
+  dec col
   jsr levelDispatch
   rts
 checkright:
@@ -845,15 +847,21 @@ checkright:
   cmp row_end
   bne checkbottom
   inc current_room
+  lda row_newLevel_begin
+  sta row
+  inc row
   jsr levelDispatch
   rts
 checkbottom:
   lda col
-  sta $1000
   cmp col_newLevel_end
   bne checkLeft
   dec current_room
   dec current_room
+  lda col_begin
+  sta col
+  inc col
+  inc col
   jsr levelDispatch
   rts
 checkLeft:
@@ -861,6 +869,9 @@ checkLeft:
   cmp row_begin
   bne error
   dec current_room
+  lda row_end
+  sta row
+  dec row
   jsr levelDispatch
 
 error: ;shouldn't happen
