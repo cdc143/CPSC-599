@@ -1041,7 +1041,8 @@ w:						dc.b #9
 a:							dc.b #17
 s:							dc.b #41
 d:							dc.b #18
-q:							dc.b #48
+;q:							dc.b #48
+q:						dc.b #55	;changing quit button to f5 so not close to w,a,s,d
 f1:						dc.b #39
 p1_sprite:				dc.b #81		;81 = circle
 lives_sprite:			dc.b #83		;heart
