@@ -242,14 +242,14 @@ quitBounce:
 
 gameOverEndBounce:
  jmp gameOverEnd
- 
+
 initChars:
  lda #$01
  sta row		; row
  sta col_bot
  lda #$0b
  sta col		; col
-initCharsNextLevel:	;this is a branch so it skips over assigning row and col to 
+initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
 ;player -> this assumes that it is done before this subroutine is done.
  ldx lives	;load index of where to draw lives to screen
 ;these lines are here so that they refresh the screen every time
@@ -258,7 +258,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  pha			; push acc onto stack
  ora #$0f		; set character memory (bits 0-3)
  sta $9005 		; store result
- 
+
  jsr getRandom
  and #$07
  sta draw_num_enemies
@@ -499,7 +499,7 @@ addCols:		;converts to row spacing
  bne addCols
 colsnext:
  rts
- 
+
 loseLife:			;player dies
  lda space_sprite
  ldx lives
@@ -511,7 +511,7 @@ loseLife:			;player dies
  jmp gameOver
 loseLifeNext:
  rts
- 
+
 collision:		 ; detect collision between B and C
  ldy #$01
  sty coll_loop_count	;reg for coll animation
@@ -546,7 +546,7 @@ drawcoll:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
- 
+
 portalAnimation:
  jsr $e55f
  lda screen_colour
@@ -832,8 +832,8 @@ timer:
  rts			 ; return
 
 loadNewLevel:
-  lda row
-  cmp row_newLevel_begin		;checking left side
+  lda col
+  cmp row_newLevel_begin		;checking top
   bne checkright
   inc current_room
   inc current_room
@@ -841,17 +841,28 @@ loadNewLevel:
   jsr levelDispatch
   rts
 checkright:
-  lda col
-  cmp col_mid
+  lda row
+  cmp row_end
   bne checkbottom
   inc current_room
   jsr levelDispatch
   rts
 checkbottom:
-  brk
+  lda col
+  cmp col_newLevel_end
+  bne checkLeft
+  dec current_room
+  dec current_room
+  jsr levelDispatch
+  rts
+checkLeft:
   lda row
-  sta $1000
-  brk
+  cmp row_begin
+  bne error
+  dec current_room
+  jsr levelDispatch
+
+error: ;shouldn't happen
   rts
 levelDispatch:
   ldy current_room
@@ -875,11 +886,11 @@ check5:
   bne check6
   jsr loadLevel4
   rts
-check6:	
+check6:
 	;temporarily goes to room 1 just for continuity.
- lda #$00
- sta current_room	;store in current room variables
- jsr loadLevel3
+ ;lda #$00
+ ;sta current_room	;store in current room variables
+ ;jsr loadLevel3
  rts
 
  ;changed all the $a6 to $66 because the character changes depending on whether
@@ -935,9 +946,9 @@ level2bottom:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 level2bottomend
 
 level3top:
@@ -1026,7 +1037,8 @@ wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
 row_begin:			dc.b #$00
-row_newLevel_begin: dc.b #$0a
+row_newLevel_begin: dc.b #$01
+col_newLevel_end:   dc.b #$13
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
 row_end:				dc.b #$15
