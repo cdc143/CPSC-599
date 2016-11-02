@@ -194,11 +194,6 @@ drawLives:		;draw lives to screen
  dex
  cpx #$00
  bne drawLives
-;return
-; lda $9005		; load character memory
-; pha			; push acc onto stack
-; ora #$0f		; set character memory (bits 0-3)
-; sta $9005 		; store result
  rts
 
 getRandom:
@@ -256,8 +251,7 @@ initChars:
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to 
 ;player -> this assumes that it is done before this subroutine is done.
- ldx init_lives	;use as an x-value to draw the lives to screen
- 
+ ldx lives	;load index of where to draw lives to screen
 ;these lines are here so that they refresh the screen every time
  jsr drawLives	;draw current lives to screen
  lda $9005		; load character memory
@@ -525,7 +519,12 @@ collision:		 ; detect collision between B and C
  cmp #$01
  beq collision_bot
  ldy graphics_top,x	; load current char
- cpy wall_sprite	; check if is # (wall)
+ cmp #$00
+ beq collision_compares	;branch instead of using jmp
+collision_bot:
+ ldy graphics_bot,x
+collision_compares:
+ cpy wall_sprite
  beq drawcoll
  cpy portal_sprite
  beq portalAnimation
@@ -548,31 +547,6 @@ drawcoll:
  jsr drawCharacter
  rts
  
-collision_bot:
- ldy graphics_bot,x	; load current char
- cpy wall_sprite		; check if is # (wall)
- beq drawcoll_bot
- cpy portal_sprite
- beq portalAnimation
- cpy door_sprite
- bne checkEnemyBot
- jsr $e55f
- jsr loadNewLevel
- jsr initCharsNextLevel
-checkEnemyBot:
- cpy enemy_sprite			; check if character is enemy
- bne drawCharacter	; not C
- ldy #$05			;set up all this for collision
- sty coll_loop_count			;reg for coll animation loops
- lda #$06
- sta coll_char_colour	; char_colour
- ;jsr resetcollision
- jsr loseLife		;
-drawcoll_bot:
- jsr collAnimationLoop
- jsr drawCharacter
- rts
-
 portalAnimation:
  jsr $e55f
  lda screen_colour
@@ -755,8 +729,6 @@ compareCollLeft:
  inc row
  rts
 
-checkCollLeftForBot:
-
 collRight:	;d pressed
  ldy #$00
  ldx col
@@ -765,7 +737,6 @@ collRight:	;d pressed
  lda col_bot
  cmp #$01
  bne collRightTop
- ;jsr subRowForBot
  lda graphics_bot,x
  jmp compareCollRight
 collRightTop:
@@ -796,7 +767,6 @@ collUp:	;w pressed
  lda col_bot
  cmp #$01
  bne collUpTop
- ;jsr subRowForBot
  lda graphics_bot,x
  jmp compareCollUp
 collUpTop:
@@ -820,7 +790,6 @@ collDown:	;s pressed
  lda col_bot
  cmp #$01
  bne collDownTop
- ;jsr subRowForBot
  lda graphics_bot,x
  jmp compareCollDown
 collDownTop:
@@ -847,14 +816,6 @@ addColsAndTransfY:
  clc
  adc row
  tax
- rts
-
-timerLoopLoop:
- lda #$4f
- jsr timerLoop
- dec timer_loop
- cmp #$00
- bne timerLoopLoop
  rts
 
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
@@ -914,8 +875,12 @@ check5:
   bne check6
   jsr loadLevel4
   rts
-check6:
-  rts
+check6:	
+	;temporarily goes to room 1 just for continuity.
+ lda #$00
+ sta current_room	;store in current room variables
+ jsr loadLevel3
+ rts
 
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
