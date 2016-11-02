@@ -77,7 +77,7 @@ gameLoopTop:
  jsr loadLevel3
  ldx init_lives
  stx lives
- jmp drawLives
+ jmp initChars
 
 ; loads level 1
 ; loading a level overwrites the A and X registers at the moment
@@ -195,11 +195,11 @@ drawLives:		;draw lives to screen
  cpx #$00
  bne drawLives
 ;return
- lda $9005		; load character memory
- pha			; push acc onto stack
- ora #$0f		; set character memory (bits 0-3)
- sta $9005 		; store result
- bne initChars	; just a branch always over
+; lda $9005		; load character memory
+; pha			; push acc onto stack
+; ora #$0f		; set character memory (bits 0-3)
+; sta $9005 		; store result
+ rts
 
 getRandom:
  lda seed
@@ -245,13 +245,26 @@ initEnemyLocation:
 quitBounce:
    jmp quit
 
-
+gameOverEndBounce:
+ jmp gameOverEnd
+ 
 initChars:
  lda #$01
  sta row		; row
  sta col_bot
  lda #$0b
  sta col		; col
+initCharsNextLevel:	;this is a branch so it skips over assigning row and col to 
+;player -> this assumes that it is done before this subroutine is done.
+ ldx init_lives	;use as an x-value to draw the lives to screen
+ 
+;these lines are here so that they refresh the screen every time
+ jsr drawLives	;draw current lives to screen
+ lda $9005		; load character memory
+ pha			; push acc onto stack
+ ora #$0f		; set character memory (bits 0-3)
+ sta $9005 		; store result
+ 
  jsr getRandom
  and #$07
  sta draw_num_enemies
@@ -273,7 +286,7 @@ top:			; top of loop
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
  cmp f1 			;f1 to restart
- beq gameOverEnd	;bounce to game over to take us to gameLoopTop
+ beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
  cmp a		 	;a pressed
  beq playleft	 	; move left
  cmp d		 	;d pressed
@@ -480,9 +493,6 @@ getRowColForm:		;get coord in row +column
  tax
  rts
 
-gameOverBounce:	;just to fix branch out of range
- jmp gameOver
-
 addCols:		;converts to row spacing
  cpx #$00
  beq colsnext
@@ -495,7 +505,19 @@ addCols:		;converts to row spacing
  bne addCols
 colsnext:
  rts
-
+ 
+loseLife:			;player dies
+ lda space_sprite
+ ldx lives
+ jsr drawTop
+ dec lives
+ lda lives
+ cmp #$00
+ bpl loseLifeNext
+ jmp gameOver
+loseLifeNext:
+ rts
+ 
 collision:		 ; detect collision between B and C
  ldy #$01
  sty coll_loop_count	;reg for coll animation
@@ -505,9 +527,13 @@ collision:		 ; detect collision between B and C
  ldy graphics_top,x	; load current char
  cpy wall_sprite	; check if is # (wall)
  beq drawcoll
+ cpy portal_sprite
+ beq portalAnimation
  cpy door_sprite
  bne checkEnemy
+ jsr $e55f
  jsr loadNewLevel
+ jsr initCharsNextLevel	;loads character, lives, and enemies into next level
 checkEnemy:
  cpy enemy_sprite		; check if character is enemy
  bne drawCharacter	; not C
@@ -521,13 +547,19 @@ drawcoll:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
-
+ 
 collision_bot:
  ldy graphics_bot,x	; load current char
  cpy wall_sprite		; check if is # (wall)
  beq drawcoll_bot
  cpy portal_sprite
  beq portalAnimation
+ cpy door_sprite
+ bne checkEnemyBot
+ jsr $e55f
+ jsr loadNewLevel
+ jsr initCharsNextLevel
+checkEnemyBot:
  cpy enemy_sprite			; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
@@ -539,16 +571,6 @@ collision_bot:
 drawcoll_bot:
  jsr collAnimationLoop
  jsr drawCharacter
- rts
-
-loseLife:			;player dies
- lda space_sprite
- ldx lives
- jsr drawTop
- dec lives
- lda lives
- cmp #$00
- bmi gameOverBounce
  rts
 
 portalAnimation:
@@ -579,7 +601,6 @@ drawCharacter:
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
-
 
 getXCoord:
  ldy #$00
@@ -851,7 +872,7 @@ timer:
 
 loadNewLevel:
   lda row
-  cmp row_newLevel_begin
+  cmp row_newLevel_begin		;checking left side
   bne checkright
   inc current_room
   inc current_room
