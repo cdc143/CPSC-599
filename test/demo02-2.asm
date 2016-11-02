@@ -246,7 +246,7 @@ gameOverEndBounce:
 initChars:
  lda #$01
  sta row		; row
- sta col_bot
+ sta row_bot
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
@@ -330,21 +330,21 @@ attack:
 
 left:
  lda #$00			;reset bottom collision
- sta col_bot
+ sta row_bot
  ldx row			;load rows
  ldy col			;load cols
- cpy col_mid_down			;check if cols > 11 (bottom half of screen)
+ cpy row_mid_down			;check if cols > 11 (bottom half of screen)
  bmi updateLeft		;not bottom of screen
  beq leftCheck		; =11, so check if far right side
  bpl leftBot		; for sure bottom
 leftCheck:
- cpx row_mid_left			 ; check if row > 15, (bottom of screen)
+ cpx col_mid_left			 ; check if row > 15, (bottom of screen)
  bmi updateLeft		;not bottom of screen
 leftBot:
- lda #$01			;set col_bot flag
- sta col_bot
+ lda #$01			;set row_bot flag
+ sta row_bot
 updateLeft:
- cpx row_begin				; check if end of screen on left
+ cpx col_begin			; check if end of screen on left
  beq updateNewLocBounce	; don't move character because it is at end of left screen
  jsr updatePrevLoc
  dec row				; rows -1
@@ -352,21 +352,21 @@ updateLeft:
 
 right:			;similar as above left subroutine
  lda #$00
- sta col_bot
+ sta row_bot
  ldx row		;load rows
  ldy col
- cpy col_mid_down
+ cpy row_mid_down
  bmi updateRight
  beq rightCheck
  bpl rightBot
 rightCheck:
- cpx row_mid_right		 	; check if x >13
+ cpx col_mid_right		 	; check if x >13
  bmi updateRight
 rightBot:
- lda #$01			;set col_bot flag
- sta col_bot
+ lda #$01			;set row_bot flag
+ sta row_bot
 updateRight:
- cpx row_end		 ; check if x =21 (end of right)
+ cpx col_end		 ; check if x =21 (end of right)
  beq updateNewLocBounce	 ; at end of screen right
  jsr updatePrevLoc
  inc row 		 ; rows +1
@@ -377,14 +377,14 @@ updateNewLocBounce:	;fix branch out of range
 
 up:
  lda #$00
- sta col_bot
+ sta row_bot
  ldx col			;top cols
- cpx col_begin		 ; check if x < 21 (on top row)
+ cpx row_begin		 ; check if x < 21 (on top row)
  beq updateNewLoc	 ; at end of screen top
- cpx col_mid_up			;else, check if in top half of screen
+ cpx row_mid_up			;else, check if in top half of screen
  bmi updateUp		;yes, in top half of screen
- lda #$01			;no, in bottom half of screen; set col_bot flag
- sta col_bot
+ lda #$01			;no, in bottom half of screen; set row_bot flag
+ sta row_bot
 updateUp:
  jsr updatePrevLoc
  dec col 			 ; cols -1
@@ -392,13 +392,13 @@ updateUp:
 
 down:
  lda #$00
- sta col_bot
+ sta row_bot
  ldx col
- cpx col_mid_down	 ; check if bottom (greater than last spot on second to bottom row)
+ cpx row_mid_down	 ; check if bottom (greater than last spot on second to bottom row)
  bmi updateDown
  lda #$01
- sta col_bot
- cpx col_end			;check very bottom of screen
+ sta row_bot
+ cpx row_end			;check very bottom of screen
  beq updateNewLoc
 updateDown:
  jsr updatePrevLoc
@@ -407,7 +407,7 @@ updateDown:
 
 updateNewLoc:
  jsr getRowColForm	;get row/col
- ;lda col_bot		;check if in second half of screen
+ ;lda row_bot		;check if in second half of screen
  ;cmp #$00
  ;bne updateNewLocBot
  jsr collision	; collision detection
@@ -415,7 +415,7 @@ updateNewLoc:
 
 updatePrevLoc:
  jsr getRowColForm
- lda col_bot
+ lda row_bot
  cmp #$01
  bne checkColToTop
  beq checkColToBot
@@ -436,25 +436,25 @@ checkColToBot:	; going from top to bottom
  beq checkRightToBot	;check 255th byte
  bpl checkRowsToBot
  lda col
- cmp col_mid_down		;check if col is 11
+ cmp row_mid_down		;check if col is 11
  beq prevLocIsTop	;going from top to bottom
  bne prevBot
 
 checkLeftToTop:	;check row 0b going from bottom to top from left
  lda col
- cmp col_mid_down			;check if in row 0b
+ cmp row_mid_down			;check if in row 0b
  beq prevLocIsTop	;yes,
  bne checkRowsToTop	;no, so check for another row
 
 checkRightToBot:	;check moving right to bottom around 255th byte
  lda col
- cmp col_mid_down
+ cmp row_mid_down
  beq prevLocIsTop	;moving from top to bot
  bne prevBot		;nope, on bottom
 
 checkRowsToTop:		;check moving from 0c to 0b
  lda col
- cmp col_mid_down
+ cmp row_mid_down
  bpl prevBot		; on bottom if > 0b
  bne prevLocIsTop
 
@@ -515,7 +515,7 @@ loseLifeNext:
 collision:		 ; detect collision between B and C
  ldy #$01
  sty coll_loop_count	;reg for coll animation
- lda col_bot
+ lda row_bot
  cmp #$01
  beq collision_bot
  ldy graphics_top,x	; load current char
@@ -565,7 +565,7 @@ portalAnimTop:
  jmp gameLoopTop
 
 drawCharacter:
- ldy col_bot
+ ldy row_bot
  cpy #$01
  beq drawBottom
  jsr getXCoord
@@ -613,7 +613,7 @@ collAnimationLoop:
  jsr checkColBot
  jsr collisionAnimation
  lda space_sprite
- ldy col_bot
+ ldy row_bot
  cpy #$01
  beq drawSpaceBot
  jsr drawToScreen
@@ -631,10 +631,10 @@ animLoopNext:
 
 checkColBot:
  lda col
- cmp col_mid_down
- bmi col_bot_set_0
+ cmp row_mid_down
+ bmi row_bot_set_0
  beq checkColMid
- bpl col_bot_set_1
+ bpl row_bot_set_1
 
 checkColMid:
  lda row
@@ -651,34 +651,34 @@ checkColMid:
  rts
 
 checkLeftColBot:	;animation moves right
- cmp row_mid_right
- bmi col_bot_set_0
- bpl col_bot_set_1
+ cmp col_mid_right
+ bmi row_bot_set_0
+ bpl row_bot_set_1
 checkRightColBot:		;animation moves left
- cmp row_mid_right
- bmi col_bot_set_0
- bpl col_bot_set_1
+ cmp col_mid_right
+ bmi row_bot_set_0
+ bpl row_bot_set_1
 checkUpColBot:			;animation moves down
- cmp col_mid_down
- bmi col_bot_set_0
- bpl col_bot_set_1
+ cmp row_mid_down
+ bmi row_bot_set_0
+ bpl row_bot_set_1
 checkDownColBot:		;animation moves up
- cmp col_mid_up
- bmi col_bot_set_0
- bpl col_bot_set_1
-col_bot_set_1:
+ cmp row_mid_up
+ bmi row_bot_set_0
+ bpl row_bot_set_1
+row_bot_set_1:
  lda #$01
- sta col_bot
+ sta row_bot
  rts
-col_bot_set_0:
+row_bot_set_0:
  lda #$00
- sta col_bot
+ sta row_bot
  rts
 
 collisionAnimation:
  jsr getXCoord
  lda p1_sprite
- ldy col_bot
+ ldy row_bot
  cpy #$01
  beq storeNewCollBot
  sta graphics_top,x	; store in new index
@@ -711,7 +711,7 @@ collLeft:		;a pressed
  ldx col
  jsr addColsAndTransfY
  inx
- lda col_bot
+ lda row_bot
  cmp #$01
  bne collLeftTop
  lda graphics_bot,x
@@ -724,7 +724,7 @@ compareCollLeft:
  cmp enemy_sprite
  beq collRet
  ldx row
- cpx row_end		;check if far left
+ cpx col_end		;check if far left
  beq collRet
  inc row
  rts
@@ -734,7 +734,7 @@ collRight:	;d pressed
  ldx col
  jsr addColsAndTransfY
  dex
- lda col_bot
+ lda row_bot
  cmp #$01
  bne collRightTop
  lda graphics_bot,x
@@ -747,7 +747,7 @@ compareCollRight:
  cmp enemy_sprite
  beq collRet
  ldx row
- cpx row_begin
+ cpx col_begin
  beq collRet
  dec row
  rts
@@ -764,7 +764,7 @@ collUp:	;w pressed
  ldx col
  inx
  jsr addColsAndTransfY
- lda col_bot
+ lda row_bot
  cmp #$01
  bne collUpTop
  lda graphics_bot,x
@@ -777,7 +777,7 @@ compareCollUp:
  cmp enemy_sprite
  beq collRet
  ldx col
- cpx col_end
+ cpx row_end
  beq collRet
  inc col
  rts
@@ -787,7 +787,7 @@ collDown:	;s pressed
  ldx col
  dex
  jsr addColsAndTransfY
- lda col_bot
+ lda row_bot
  cmp #$01
  bne collDownTop
  lda graphics_bot,x
@@ -800,13 +800,13 @@ compareCollDown:
  cmp enemy_sprite
  beq collRet
  ldx col
- cpx col_begin
+ cpx row_begin
  dec col
  rts
 
 subRowForBot:
  txa
- sbc row_mid_right
+ sbc col_mid_right
  tax
  rts
 
@@ -842,7 +842,7 @@ loadNewLevel:
   rts
 checkright:
   lda row
-  cmp row_end
+  cmp col_end
   bne checkbottom
   inc current_room
   jsr levelDispatch
@@ -857,7 +857,7 @@ checkbottom:
   rts
 checkLeft:
   lda row
-  cmp row_begin
+  cmp col_begin
   bne error
   dec current_room
   jsr levelDispatch
@@ -1009,7 +1009,7 @@ level4bottomend
 
 row:						dc.b 0
 col:						dc.b 0
-col_bot:				dc.b 0
+row_bot:				dc.b 0
 coll_loop_count:		dc.b 0
 portal_counter:		dc.b 0
 init_lives:				dc.b #$08
@@ -1036,19 +1036,19 @@ enemy_sprite:		dc.b #87		;circle
 wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
-row_begin:			dc.b #$00
+col_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$13
-row_mid_left:		dc.b #$0f
-row_mid_right:		dc.b #$0d
-row_end:				dc.b #$15
-col_begin:				dc.b #$00
-col_mid_down:		dc.b #$0b
-col_mid_up:			dc.b #$0d
-col_end:				dc.b #$16
+col_mid_left:		dc.b #$0f
+col_mid_right:		dc.b #$0d
+col_end:				dc.b #$15
+row_begin:				dc.b #$00
+row_mid_down:		dc.b #$0b
+row_mid_up:			dc.b #$0d
+row_end:				dc.b #$16
 seed:					dc.b #$74 ;constant seed
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0
 draw_num_enemies:	dc.b 0
-door_sprite       dc.b $5b
-col_mid           dc.b #$0a
+door_sprite:       dc.b $5b
+col_mid:           dc.b #$0a
