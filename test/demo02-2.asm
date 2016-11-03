@@ -210,7 +210,7 @@ gameOver: ;
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp q ;quit
+ cmp f5 ;quit
  beq quitBounce
  cmp f1 ;f1 to restart
  beq gameLoopTopBounce
@@ -313,7 +313,7 @@ next:
  pla			; pull acc from stack
  sta $9005 		; store in char mem
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp q		 ; check if Q is pressed -> quit
+ cmp f5		 ; check if Q is pressed -> quit
  bne top		 ;continue input
 quit:
  jsr $e55f       ; clear screen before exiting
@@ -519,7 +519,7 @@ collision:		 ; detect collision between B and C
  cmp #$01
  beq collision_bot
  ldy graphics_top,x	; load current char
- cmp #$00
+ cmp #$00		;just using this cmp to jump over collision_bot
  beq collision_compares	;branch instead of using jmp
 collision_bot:
  ldy graphics_bot,x
@@ -568,7 +568,7 @@ drawCharacter:
  ldy col_bot
  cpy #$01
  beq drawBottom
- jsr getXCoord
+ jsr getRowColForm
  lda p1_sprite		; 'B'
  bcs drawBottom
  bcc drawTop
@@ -576,15 +576,9 @@ drawCharacter:
  jsr timerLoop	; jump to timer
  rts
 
-getXCoord:
- ldy #$00
- ldx col
- jsr addColsAndTransfY
- rts
-
 drawBottom:
- jsr getXCoord
- lda p1_sprite
+ jsr getRowColForm
+ lda p1_sprite ;#$01
  jsr drawToScreenBot
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -676,7 +670,7 @@ col_bot_set_0:
  rts
 
 collisionAnimation:
- jsr getXCoord
+ jsr getRowColForm
  lda p1_sprite
  ldy col_bot
  cpy #$01
@@ -686,11 +680,12 @@ collisionAnimation:
  sta char_colour_loc_top,x	; store char_colour
  jmp collAnimNext
 storeNewCollBot:
+ lda p1_sprite;#$02
  sta graphics_bot,x	; store in new index
  lda coll_char_colour		    ; char_colour
  sta char_colour_loc_bot,x	; store char_colour
 collAnimNext:
- lda #$40		; arbitrary number for timer
+ lda #$40;#$6e		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
 
@@ -707,33 +702,65 @@ collMovementCheck:
  bne collRight ;default
 
 collLeft:		;a pressed
- ldy #$00
- ldx col
- jsr addColsAndTransfY
+ jsr getRowColForm
  inx
- lda col_bot
+ jsr collTop
  cmp #$01
- bne collLeftTop
- lda graphics_bot,x
- jmp compareCollLeft
-collLeftTop:
- lda graphics_top,x
-compareCollLeft:
- cmp wall_sprite	;hit a wall
- beq collRet
- cmp enemy_sprite
  beq collRet
  ldx row
  cpx row_end		;check if far left
  beq collRet
- inc row
+ inc row			;else increment row
+ ;perhaps check col_bot here
  rts
 
 collRight:	;d pressed
- ldy #$00
- ldx col
- jsr addColsAndTransfY
+ jsr getRowColForm
  dex
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx row
+ cpx row_begin
+ beq collRet
+ dec row
+ rts
+  
+collDownBounce:
+ jsr collDown
+collRet:
+ rts
+
+collUp:	;w pressed
+ jsr getRowColForm
+ txa
+ clc 
+ adc #$16	;add another row
+ tax
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx col
+ cpx col_end
+ beq collRet
+ inc col
+ rts
+
+collDown:	;s pressed
+  jsr getRowColForm
+ txa
+ sec 
+ sbc #$16	;add another row
+ tax
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx col
+ cpx col_begin
+ dec col
+ rts
+
+collTop:
  lda col_bot
  cmp #$01
  bne collRightTop
@@ -743,93 +770,24 @@ collRightTop:
  lda graphics_top,x
 compareCollRight:
  cmp wall_sprite
- beq collRet
+ beq collTopSet1
  cmp enemy_sprite
- beq collRet
- ldx row
- cpx row_begin
- beq collRet
- dec row
+ beq collTopSet1
+ lda #$00
  rts
-
-collDownBounce:
- jsr collDown
+collTopSet1:
+ lda #$01
  rts
-
-collRet:
- rts
-
-collUp:	;w pressed
- ldy #$00
- ldx col
- inx
- jsr addColsAndTransfY
- lda col_bot
- cmp #$01
- bne collUpTop
- lda graphics_bot,x
- jmp compareCollUp
-collUpTop:
- lda graphics_top,x
-compareCollUp:
- cmp wall_sprite
- beq collRet
- cmp enemy_sprite
- beq collRet
- ldx col
- cpx col_end
- beq collRet
- inc col
- rts
-
-collDown:	;s pressed
- ldy #$00
- ldx col
- dex
- jsr addColsAndTransfY
- lda col_bot
- cmp #$01
- bne collDownTop
- lda graphics_bot,x
- jmp compareCollDown
-collDownTop:
- lda graphics_top,x
-compareCollDown:
- cmp wall_sprite
- beq collRet
- cmp enemy_sprite
- beq collRet
- ldx col
- cpx col_begin
- dec col
- rts
-
-subRowForBot:
- txa
- sbc row_mid_right
- tax
- rts
-
-addColsAndTransfY:
- jsr addCols
- tya
- clc
- adc row
- tax
- rts
-
+ 
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
  ldy #$ff		 ; 255 (basically the biggest number possible)
- jsr timer		 ; jump to timer loop
- sbc #$01		 ; acc - 1
- bpl timerLoop   ; branch if positive (N not set)
- rts			 ; N set, return
-
 timer:
  dey			 ; y-1
  cpy #$00		 ; check if y=0
  bne timer		 ; if not, loop
- rts			 ; return
+ sbc #$01		 ; acc - 1
+ bpl timerLoop   ; branch if positive (N not set)
+ rts			 ; N set, return
 
 loadNewLevel:
   lda col
@@ -1041,7 +999,7 @@ w:						dc.b #9
 a:							dc.b #17
 s:							dc.b #41
 d:							dc.b #18
-q:							dc.b #48
+f5:							dc.b #55
 f1:						dc.b #39
 p1_sprite:				dc.b #81		;81 = circle
 lives_sprite:			dc.b #83		;heart
@@ -1065,3 +1023,4 @@ rooms:          dc.b 0,0,0,0
 draw_num_enemies:	dc.b 0
 door_sprite       dc.b $5b
 col_mid           dc.b #$0a
+isCollision		dc.b #$00
