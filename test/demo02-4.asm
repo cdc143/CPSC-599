@@ -52,25 +52,31 @@ gameLoopTop:
  jsr timerLoop
  ;Setup new location for characters
  jsr $e55f       		; clear screen
- lda char_colour		; load new char_colour to acc
- sta $0286		 		; change text char_colour
 
 ;changes the border and background char_colour -> page 175 of vic do manual
  lda screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
- ldx #$03
- stx current_room
+ ;ldx #$03
+ ;stx current_room
  ldx #$00
+ ldy #$00
+ lda #$03
+ sta rooms,y
+ iny
+ lda #$04
+ sta rooms,y
+ iny
+ lda #$02
+ sta rooms,y
+ iny
+ lda #$01
+ sta rooms,y
  jsr loadLevel3
  ldx init_lives
  stx lives
- jmp drawLives
+ jmp initChars
 
-; loads level 1
-; loading a level overwrites the A and X registers at the moment
-; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
-
-loadLevel1:
+loadLevel1:		;default room for now
  ldx #$00					; reset x to use as a loop counter
 loadLevel1Loop1:       ; loop that loads the top half of the level
  lda level1top,x          ; load the character from the x offset of the map
@@ -89,6 +95,7 @@ loadLevel1Loop2:       ; loop that loads the bottom half of the level
  inx
  cpx #level1bottomend-level1bottom
  bne loadLevel1Loop2
+loadLevel1End:
  rts
 
 ; loads level 2
@@ -112,6 +119,7 @@ loadLevel2Loop2:
  inx
  cpx #level2bottomend-level2bottom
  bne loadLevel2Loop2
+loadLevel2End:
  rts
 
 ; loads level 3
@@ -122,7 +130,7 @@ loadLevel3Loop1:
  lda level3top,x
  sta graphics_top,x
  lda wall_colour
- sta char_colour_loc_top,x 
+ sta char_colour_loc_top,x
  inx
  cpx #level3topend-level3top
  bne loadLevel3Loop1
@@ -135,6 +143,7 @@ loadLevel3Loop2:
  inx
  cpx #level3bottomend-level3bottom
  bne loadLevel3Loop2
+loadLevel3End:
  rts
 
 ; loads level 4
@@ -143,9 +152,9 @@ loadLevel4:
  ldx #$00
 loadLevel4Loop1:
  lda level4top,x
- sta $1edc,x
+ sta graphics_top,x
  lda wall_colour
- sta $96dc,x
+ sta char_colour_loc_top,x
  inx
  cpx #level4topend-level4top
  bne loadLevel4Loop1
@@ -158,6 +167,7 @@ loadLevel4Loop2:
  inx
  cpx #level4bottomend-level4bottom
  bne loadLevel4Loop2
+loadLevel4End:
  rts
 
 drawLives:		;draw lives to screen
@@ -168,12 +178,7 @@ drawLives:		;draw lives to screen
  dex
  cpx #$00
  bne drawLives
-;return
- lda $9005		; load character memory
- pha			; push acc onto stack
- ora #$0f		; set character memory (bits 0-3)
- sta $9005 		; store result
- bne initChars	; just a branch always over
+ rts
 
 getRandom:
  lda seed
@@ -183,18 +188,15 @@ getRandom:
 
 gameOver: ;
 ;TODO: Print "Game over"
- ;jsr $e55f
- lda #$3e		 ; this makes a green border and black background
+ lda #$3e		 ; game over border/background colour blue/light blue
  sta $900f		 ; store in screen and border register
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp q ;quit
+ cmp f5 ;quit
  beq quitBounce
  cmp f1 ;f1 to restart
- beq gameLoopTopBounce
  bne gameOverEnd
-gameLoopTopBounce:
  jmp gameLoopTop
 
 initEnemyLocation:
@@ -204,13 +206,11 @@ initEnemyLocation:
   cmp space_sprite
   bne initEnemyLocation
   lda enemy_sprite
-  ;sta graphics_bot,x
   sta graphics_playfield_start,x ;potential problem/not problem: enemies
 							;can only spawn 255 spaces past graphics_playfield_start
   lda char_colour
   adc #$10
   sta color_playfield_start,x
-  ;sta char_colour_loc_bot,x
   dey
   cpy #$00
   bne initEnemyLocation
@@ -218,22 +218,31 @@ initEnemyLocation:
 quitBounce:
    jmp quit
 
+gameOverEndBounce:
+ jmp gameOverEnd
 
 initChars:
  lda #$01
  sta row		; row
- sta col_bot
  lda #$0b
  sta col		; col
+initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+;player -> this assumes that it is done before this subroutine is done.
+ ldx lives	;load index of where to draw lives to screen
+;these lines are here so that they refresh the screen every time
+ jsr drawLives	;draw current lives to screen
+ lda $9005		; load character memory
+ pha			; push acc onto stack
+ ora #$0f		; set character memory (bits 0-3)
+ sta $9005 		; store result
+
  jsr getRandom
  and #$07
  tay
  jsr initEnemyLocation
  jsr getRowColForm
  lda p1_sprite		; 'B'
- sta graphics_top,x	; store far left second row
- lda char_colour		;black/initializing character location on row (just convenience that it's also black)
- sta char_colour_loc_top,x		; char char_colour
+ jsr drawToScreen
  pla			; pull acc from stack
  sta $9005		; store in char memory
 
@@ -246,7 +255,7 @@ top:			; top of loop
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
  cmp f1 			;f1 to restart
- beq gameOverEnd	;bounce to game over to take us to gameLoopTop
+ beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
  cmp a		 	;a pressed
  beq playleft	 	; move left
  cmp d		 	;d pressed
@@ -279,8 +288,9 @@ next:
  pla			; pull acc from stack
  sta $9005 		; store in char mem
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp q		 ; check if Q is pressed -> quit
- bne top		 ;continue input
+ cmp f5		 ; check if Q is pressed -> quit
+ beq quit		 ;continue input
+ jmp top
 quit:
  jsr $e55f       ; clear screen before exiting
  brk			 ; quit
@@ -290,15 +300,16 @@ quit:
 ;working.
 attack:
  lda #$87		 	; f# (175)
-  ;jsr $ffd2
  sta $900b			 ; store sound
  rts
 
-left:
- lda #$00			;reset bottom collision
- sta col_bot
+loadRowColLR:
+ jsr col_bot_set_0
  ldx row			;load rows
  ldy col			;load cols
+ rts
+left:
+ jsr loadRowColLR
  cpy col_mid_down			;check if cols > 11 (bottom half of screen)
  bmi updateLeft		;not bottom of screen
  beq leftCheck		; =11, so check if far right side
@@ -307,8 +318,7 @@ leftCheck:
  cpx row_mid_left			 ; check if row > 15, (bottom of screen)
  bmi updateLeft		;not bottom of screen
 leftBot:
- lda #$01			;set col_bot flag
- sta col_bot
+ jsr col_bot_set_1
 updateLeft:
  cpx row_begin				; check if end of screen on left
  beq updateNewLocBounce	; don't move character because it is at end of left screen
@@ -317,10 +327,7 @@ updateLeft:
  jmp updateNewLocBounce
 
 right:			;similar as above left subroutine
- lda #$00
- sta col_bot
- ldx row		;load rows
- ldy col
+ jsr loadRowColLR
  cpy col_mid_down
  bmi updateRight
  beq rightCheck
@@ -329,8 +336,7 @@ rightCheck:
  cpx row_mid_right		 	; check if x >13
  bmi updateRight
 rightBot:
- lda #$01			;set col_bot flag
- sta col_bot
+ jsr col_bot_set_1
 updateRight:
  cpx row_end		 ; check if x =21 (end of right)
  beq updateNewLocBounce	 ; at end of screen right
@@ -342,28 +348,24 @@ updateNewLocBounce:	;fix branch out of range
  jmp updateNewLoc
 
 up:
- lda #$00
- sta col_bot
+ jsr col_bot_set_0
  ldx col			;top cols
  cpx col_begin		 ; check if x < 21 (on top row)
  beq updateNewLoc	 ; at end of screen top
  cpx col_mid_up			;else, check if in top half of screen
  bmi updateUp		;yes, in top half of screen
- lda #$01			;no, in bottom half of screen; set col_bot flag
- sta col_bot
+ jsr col_bot_set_1
 updateUp:
  jsr updatePrevLoc
  dec col 			 ; cols -1
  jmp updateNewLoc
 
 down:
- lda #$00
- sta col_bot
+ jsr col_bot_set_0
  ldx col
  cpx col_mid_down	 ; check if bottom (greater than last spot on second to bottom row)
  bmi updateDown
- lda #$01
- sta col_bot
+ jsr col_bot_set_1
  cpx col_end			;check very bottom of screen
  beq updateNewLoc
 updateDown:
@@ -373,17 +375,14 @@ updateDown:
 
 updateNewLoc:
  jsr getRowColForm	;get row/col
- ;lda col_bot		;check if in second half of screen
- ;cmp #$00
- ;bne updateNewLocBot
  jsr collision	; collision detection
  rts			; return
 
-updatePrevLoc:
+updatePrevLoc:		;updates where player previously was
  jsr getRowColForm
- lda col_bot
+ lda col_bot		;check if bottom or top of screen
  cmp #$01
- bne checkColToTop
+ bne checkColToTop		
  beq checkColToBot
 
 checkColToTop:	;going from bottom to top
@@ -446,16 +445,6 @@ prevBot:
 getRowColForm:		;get coord in row +column
  ldy #$00
  ldx col
- jsr addCols
- tya
- clc
- adc row
- tax
- rts
-
-gameOverBounce:	;just to fix branch out of range
- jmp gameOver
-
 addCols:		;converts to row spacing
  cpx #$00
  beq colsnext
@@ -466,7 +455,23 @@ addCols:		;converts to row spacing
  dex 			; decrement number of rows left
  cpx #$00
  bne addCols
+ tya
+ clc
+ adc row
+ tax
 colsnext:
+ rts
+
+loseLife:			;player dies
+ lda space_sprite
+ ldx lives		;this
+ jsr drawToScreen
+ dec lives
+ lda lives
+ cmp #$00
+ bpl loseLifeNext
+ jmp gameOver
+loseLifeNext:
  rts
 
 collision:		 ; detect collision between B and C
@@ -474,100 +479,78 @@ collision:		 ; detect collision between B and C
  sty coll_loop_count	;reg for coll animation
  lda col_bot
  cmp #$01
- beq collision_bot
+ beq collision_bot		
  ldy graphics_top,x	; load current char
- cpy wall_sprite	; check if is # (wall)
+ bne collision_compares	;branch instead of using jmp
+collision_bot:
+ ldy graphics_bot,x
+collision_compares:
+ cpy wall_sprite
  beq drawcoll
+ jsr checkPortalOrLevel
  cpy enemy_sprite		; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
  sty coll_loop_count			;reg for coll animation loops
- lda #$06
- sta coll_char_colour	; char_colour
- ;jsr resetcollision
- jsr loseLife		;
+ ldy #$06
+ sty coll_char_colour	; char_colour
+ jsr loseLife		;lose a life
 drawcoll:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
-
-collision_bot:
- ldy graphics_bot,x	; load current char
- cpy wall_sprite		; check if is # (wall)
- beq drawcoll_bot
+ 
+checkPortalOrLevel:
  cpy portal_sprite
  beq portalAnimation
- cpy enemy_sprite			; check if character is enemy
- bne drawCharacter	; not C
- ldy #$05			;set up all this for collision
- sty coll_loop_count			;reg for coll animation loops
- lda #$06
- sta coll_char_colour	; char_colour
- ;jsr resetcollision
- jsr loseLife		;
-drawcoll_bot:
- jsr collAnimationLoop
- jsr drawCharacter
+ cpy door_sprite
+ bne notNewLevel
+ jsr loadNewLevel
+ jmp initCharsNextLevel	;loads character, lives, and enemies into next level
+notNewLevel:
  rts
-
-loseLife:			;player dies
- lda space_sprite
- ldx lives
- jsr drawTop
- dec lives
- lda lives
- cmp #$00
- bmi gameOverBounce
- rts
-
+ 
 portalAnimation:
  jsr $e55f
  lda screen_colour
  sta temp_colour
- ldx #$08
+ ldx #$08				;number of iterations
 portalAnimTop:
  lda temp_colour
  sta $900f		 		; store in screen and border register
- adc #$33
+ adc #$33				;add random number to change colour
  sta temp_colour
- lda #$4f
- jsr timerLoop
+ jsr drawTimer
  dex
  cpx #$00
  bne portalAnimTop
- jmp gameLoopTop
+ jmp gameLoopTop		;note: this currently resets game.
+					;TODO: not completely reset game (like switching rooms)
 
 drawCharacter:
  ldy col_bot
  cpy #$01
  beq drawBottom
- jsr getXCoord
+ jsr getRowColForm
  lda p1_sprite		; 'B'
- bcs drawBottom
+ bcs drawBottom	;check for row #$12/divider row between top and bottom
  bcc drawTop
+
+drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
-
-
-getXCoord:
- ldy #$00
- ldx col
- jsr addColsAndTransfY
- rts
-
+ 
 drawBottom:
- jsr getXCoord
- lda p1_sprite
+ jsr getRowColForm
+ lda p1_sprite ;#$01
  jsr drawToScreenBot
- lda #$4f		; arbitrary number for timer
- jsr timerLoop	; jump to timer
+ jsr drawTimer
  rts
 
 drawTop:
  jsr drawToScreen
- lda #$4f		; arbitrary number for timer
- jsr timerLoop	; jump to timer
+ jsr drawTimer
  rts
 
 drawToScreen:
@@ -583,8 +566,9 @@ drawToScreenBot:
  rts
 
 collAnimationLoop:
- jsr collMovementCheck
- jsr collisionAnimation
+ jsr collMovementCheck	;check where collision moves piece
+ ;jsr checkColBot		;check top or bottom
+ jsr collisionAnimation	;collision animation
  lda space_sprite
  ldy col_bot
  cpy #$01
@@ -595,16 +579,54 @@ drawSpaceBot:
  jsr drawToScreenBot
 animLoopNext:
  dec coll_char_colour
+ dec coll_loop_count
  ldx coll_loop_count
- dex
- stx coll_loop_count
  cpx #$00
  bne collAnimationLoop
-doneCollAnimLoop:
  rts
+  
+col_bot_set_1:		;sets col_bot to 1
+ lda #$01
+ sta col_bot
+ rts
+ 
+col_bot_set_0:		;sets col_bot to 0
+ lda #$00
+ sta col_bot
+ rts
+ 
+check0or1:
+ stx pos_to_compare
+ cmp pos_to_compare
+ bmi col_bot_set_0
+ bpl col_bot_set_1
+ rts
+ 
+checkHorizontalColBot:	;animation moves right or left
+ ldx #$0e			;check if in middle of row
+ jmp check0or1
+checkUpColBot:			;animation moves down. This works
+ ldx row
+ cpx #$0e				;check if in middle of row
+ bpl checkUpColBotLeft
+ cmp col_mid_down		;animation moves down right side of screen
+ bpl col_bot_set_0
+ bmi col_bot_set_1
+checkUpColBotLeft:		;animation moves down left side of screen
+ ldx #$0a			;check if in middle of col
+ jmp check0or1
+checkDownColBot:		;animation moves up
+ ldx row
+ cpx #$0e			;check if in middle of row
+ bpl checkDownColBotLeft
+ ldx col_mid_up			;up and right side of screen
+ jmp check0or1
+checkDownColBotLeft:	;up and left side of screen
+ ldx #$0a
+ jmp check0or1
 
 collisionAnimation:
- jsr getXCoord
+ jsr getRowColForm
  lda p1_sprite
  ldy col_bot
  cpy #$01
@@ -614,11 +636,12 @@ collisionAnimation:
  sta char_colour_loc_top,x	; store char_colour
  jmp collAnimNext
 storeNewCollBot:
+ lda p1_sprite	;#$02
  sta graphics_bot,x	; store in new index
  lda coll_char_colour		    ; char_colour
  sta char_colour_loc_bot,x	; store char_colour
 collAnimNext:
- lda #$40		; arbitrary number for timer
+ lda anim_time;#$6e		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
 
@@ -633,173 +656,238 @@ collMovementCheck:
  cmp s		 ;s pressed
  beq collDownBounce
  bne collRight ;default
-
+ 
 collLeft:		;a pressed
- ldy #$00
- ldx col
- jsr addColsAndTransfY
+ jsr getRowColForm
  inx
- lda col_bot
+ jsr collTop
  cmp #$01
- bne collLeftTop
- lda graphics_bot,x
- jmp compareCollLeft
-collLeftTop:
- lda graphics_top,x
-compareCollLeft:
- cmp wall_sprite	;hit a wall
- beq collRet
- cmp enemy_sprite
  beq collRet
  ldx row
  cpx row_end		;check if far left
  beq collRet
- inc row
+ inc row			;else increment row
+checkCol_Bot_hori:
+ lda col
+ cmp col_mid_down	;check for left/right movement
+ bmi set_0
+ beq checkColH	;awkward middle transition point
+ bpl set_1
+checkColH:
+ lda row
+ jsr checkHorizontalColBot
+ ;perhaps check col_bot here
  rts
 
-checkCollLeftForBot:
-
 collRight:	;d pressed
- ldy #$00
- ldx col
- jsr addColsAndTransfY
+ jsr getRowColForm
  dex
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx row
+ cpx row_begin
+ beq collRet
+ dec row
+ bne checkCol_Bot_hori	;branch over
+  
+set_0:
+ jsr col_bot_set_0
+ rts
+set_1:
+ jsr col_bot_set_1
+ rts
+ 
+collDownBounce:
+ jsr collDown
+collRet:
+ rts
+
+collUp:	;w pressed
+ jsr getRowColForm
+ txa
+ clc 
+ adc #$16	;add another row
+ tax
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx col
+ cpx col_end
+ beq collRet
+ inc col
+checkCol_Bot_vert:
+ lda col
+ cmp col_mid_down	;check for left/right movement
+ bmi set_0
+ beq checkColV	;awkward middle transition point
+ bpl set_1
+checkColV:
+ lda col
+ jsr checkDownColBot
+ rts
+
+collDown:	;s pressed
+ jsr getRowColForm
+ txa
+ sec 
+ sbc #$16	;add another row
+ tax
+ jsr collTop
+ cmp #$01
+ beq collRet
+ ldx col
+ cpx col_begin
+ beq collRet
+ dec col
+ bne checkCol_Bot_vert	;this seems to work even though it probably shouldn't
+ 
+collTop:
  lda col_bot
  cmp #$01
  bne collRightTop
- ;jsr subRowForBot
  lda graphics_bot,x
  jmp compareCollRight
 collRightTop:
  lda graphics_top,x
 compareCollRight:
  cmp wall_sprite
- beq collRet
+ beq collTopSet1
  cmp enemy_sprite
- beq collRet
- ldx row
- cpx row_begin
- beq collRet
- dec row
+ beq collTopSet1
+ tay
+ jsr checkPortalOrLevel	;check if you hit portal or doorway during collision animation
+ lda #$00
  rts
-
-collDownBounce:
- jsr collDown
+collTopSet1:
+ lda #$01
  rts
-
-collRet:
- rts
-
-collUp:	;w pressed
- ldy #$00
- ldx col
- inx
- jsr addColsAndTransfY
- lda col_bot
- cmp #$01
- bne collUpTop
- ;jsr subRowForBot
- lda graphics_bot,x
- jmp compareCollUp
-collUpTop:
- lda graphics_top,x
-compareCollUp:
- cmp wall_sprite
- beq collRet
- cmp enemy_sprite
- beq collRet
- ldx col
- cpx col_end
- beq collRet
- inc col
- rts
-
-collDown:	;s pressed
- ldy #$00
- ldx col
- dex
- jsr addColsAndTransfY
- lda col_bot
- cmp #$01
- bne collDownTop
- ;jsr subRowForBot
- lda graphics_bot,x
- jmp compareCollDown
-collDownTop:
- lda graphics_top,x
-compareCollDown:
- cmp wall_sprite
- beq collRet
- cmp enemy_sprite
- beq collRet
- ldx col
- cpx col_begin
- dec col
- rts
-
-subRowForBot:
- txa
- sbc row_mid_right
- tax
- rts
-
-addColsAndTransfY:
- jsr addCols
- tya
- clc
- adc row
- tax
- rts
-
-timerLoopLoop:
- lda #$4f
- jsr timerLoop
- dec timer_loop
- cmp #$00
- bne timerLoopLoop
- rts
-
+ 
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
  ldy #$ff		 ; 255 (basically the biggest number possible)
- jsr timer		 ; jump to timer loop
- sbc #$01		 ; acc - 1
- bpl timerLoop   ; branch if positive (N not set)
- rts			 ; N set, return
-
 timer:
  dey			 ; y-1
  cpy #$00		 ; check if y=0
  bne timer		 ; if not, loop
- rts			 ; return
+ sbc #$01		 ; acc - 1
+ bpl timerLoop   ; branch if positive (N not set)
+ rts			 ; N set, return
 
+loadNewLevel:
+  jsr $e55f	;clear screen
+  lda col
+  cmp row_newLevel_begin		;checking top
+  bne checkright
+  inc current_room
+  inc current_room
+  lda col_newLevel_end
+  sta col
+  dec col
+  jsr levelDispatch
+  rts
+checkright:
+  lda row
+  cmp row_end
+  bne checkbottom
+  inc current_room
+  lda row_newLevel_begin
+  sta row
+  inc row
+  jsr levelDispatch
+  rts
+checkbottom:
+  lda col
+  cmp col_newLevel_end
+  bne checkLeft
+  dec current_room
+  dec current_room
+  lda col_begin
+  sta col
+  inc col
+  inc col
+  jsr levelDispatch
+  rts
+checkLeft:
+  lda row
+  cmp row_begin
+  bne error
+  dec current_room
+  lda row_end
+  sta row
+  dec row
+  jsr levelDispatch
+
+error: ;shouldn't happen
+  rts
+levelDispatch:
+  ldy current_room
+  lda rooms,y
+  cmp #$01
+  bne check3
+  jsr loadLevel1
+  rts
+check3:
+  cmp #$02
+  bne check4
+  jsr loadLevel2
+  rts
+check4:
+  cmp #$03
+  bne check5
+  jsr loadLevel3
+  rts
+check5:
+  cmp #$04
+  bne check6
+  jsr loadLevel4
+  rts
+check6:
+	;temporarily goes to room 1 just for continuity.
+ ;lda #$00
+ ;sta current_room	;store in current room variables
+ ;jsr loadLevel3
+ rts
+
+; loading a level overwrites the A and X registers at the moment
+; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
+loadLevel:	;loads a level based on random number generator
+ jsr getRandom
+ and #$03	;option of 4 rooms at moment
+ ;sta current_room
+ jsr loadLevel1
+ jsr loadLevel2
+ jsr loadLevel3
+ jsr loadLevel4
+ rts
+ 
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
 level1top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
 level1topend
 
 level1bottom:
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+  dc.b $5b,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$5b,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
 level1bottomend
 
 
@@ -818,21 +906,22 @@ level2top:
 level2topend
 
 level2bottom:
+  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$5b
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 level2bottomend
 
 level3top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -845,7 +934,7 @@ level3top:
 level3topend
 
 level3bottom:
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$5b
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -860,7 +949,7 @@ level3bottomend
 
 level4top:
   dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+  dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
@@ -873,7 +962,7 @@ level4top:
 level4topend
 
 level4bottom:
-  dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
+  dc.b $5b,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
   dc.b $66,$20,$20,$20,$76,$76,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$76,$76,$20,$20,$20,$66
@@ -907,7 +996,7 @@ w:						dc.b #9
 a:							dc.b #17
 s:							dc.b #41
 d:							dc.b #18
-q:							dc.b #48
+f5:							dc.b #55
 f1:						dc.b #39
 p1_sprite:				dc.b #81		;81 = circle
 lives_sprite:			dc.b #83		;heart
@@ -916,12 +1005,20 @@ wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
 row_begin:			dc.b #$00
+row_newLevel_begin: dc.b #$01
+col_newLevel_end:   dc.b #$140e
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
 row_end:				dc.b #$15
 col_begin:				dc.b #$00
 col_mid_down:		dc.b #$0b
 col_mid_up:			dc.b #$0d
+;col_mid           dc.b #$0a
 col_end:				dc.b #$16
-seed:					dc.b #74 ;constant seed
+seed:					dc.b #$74 ;constant seed
 current_room:		dc.b 0
+rooms:          dc.b 0,0,0,0
+door_sprite       dc.b $5b
+isCollision		dc.b #$00
+anim_time:		dc.b #$40	;time for animation
+pos_to_compare dc.b 0
