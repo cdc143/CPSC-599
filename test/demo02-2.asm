@@ -48,36 +48,75 @@
  ;changes the char_colour of text -> page 173 vic manual
 
  ;we can put music and stuff
- ;tbh, I have no idea what is going on with drawing to screen.  Totally
- ;screwed up right now.  Make a new title screen!
+ ;This is not the prettiest title page, it is just a placeholder for a better title page.
+ ;also, need a better title than "boop"!
+ lda #$00
+ ldx #$00
+ ldy #$00
+ jsr $ffbd	;initialize clock
 titleScreen:
- jsr $e55f
- lda #$08	;black
- sta $900f		 		; store in screen and border register
- ldx #$78			;screen coord; too lazy to call a subroutine
- ldy #titleName-titleNameEnd 
-drawTitleLoop:
- lda titleName,x
- jsr drawToScreen
- dey
- dex
- cpy #$00
- bne drawTitleLoop
- ldx #$8e
- ldy #titleAuthors-titleAuthorsEnd
-drawAuthorLoop:
- lda titleAuthors,x
- jsr drawToScreen
- dey
- dex
- cpy #$00
- bne drawAuthorLoop
-titleInput:
- lda $00c5
- cmp f3
- bne titleInput
- 
+ jsr $e55f		;clear screen
+ lda #$0f		;temporary colour start
+ sta temp_colour
+ jsr loadLevel3 	;load level 3 to screen
 
+titleScreenTop
+ ldx #$90			;screen coord for title; too lazy to use x,y coords
+ ldy #titleNameEnd-titleName-1	;length
+drawTitleLoop:		;draw title to screen
+ lda titleName,y
+ jsr drawToScreen
+ dey		;length -1
+ dex		;index -1
+ cpy #$00
+ bpl drawTitleLoop
+ ldx #$be		;screen coord for author names
+ ldy #titleAuthorsEnd-titleAuthors-1	
+drawAuthorLoop:
+ lda titleAuthors,y
+ jsr drawToScreen
+ dey
+ dex
+ cpy #$00
+ bpl drawAuthorLoop
+ 
+drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
+ lda temp_colour
+ sta $900f		 		; store in screen and border register  
+ jsr $ffde 		;read clock
+ cmp #$01		
+ bne titleInput
+ dec temp_colour	;random colour, pretty much
+ ;lda temp_colour	;this code does checking, but don't necessarily need it	
+					;unless we want certain screen colours
+ ;cmp #$00
+ ;bne titleInput
+ ;lda #$ff
+ ;ora temp_colour
+ ;jsr getRandom	;drawing enemies to screen breaks after a while.  Runs out of memory probably.
+ ;and #$01
+ ;sta draw_num_enemies
+ ;jsr initEnemyLocation
+titleInput:
+ lda $00c5			;check for start.  Only can press start right now. Probably should 
+ sta current_key
+ cmp f3
+ beq gameLoopTop
+ jsr checkRestartQuit
+ bne drawTitleAnimation
+ 
+;checks keys f1 and f5.  This subroutine gets rid of some stuff down below in code.
+checkRestartQuit:
+ lda current_key
+ cmp f1
+ beq titleScreen
+ cmp f5
+ bne retRestQuit
+ jsr $e55f
+ brk
+retRestQuit:
+ rts
+ 
 gameLoopTop:
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
@@ -240,12 +279,8 @@ gameOver: ;
  sta $900f		 ; store in screen and border register
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
- lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp f5 ;quit
- beq quitBounce
- cmp f1 ;f1 to restart
+ jsr checkRestartQuit
  bne gameOverEnd
- jmp titleScreen
 
 initEnemyLocation:
   jsr getRandom
@@ -266,8 +301,6 @@ initEnemyLocation:
   cpy #$00
   bne initEnemyLocation
   rts
-quitBounce:
-   jmp quit
 
 gameOverEndBounce:
  jmp gameOverEnd
@@ -308,8 +341,7 @@ top:			; top of loop
  pha				; push to stack
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
- cmp f1 			;f1 to restart
- beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
+ jsr checkRestartQuit
  cmp a		 	;a pressed
  beq playleft	 	; move left
  cmp d		 	;d pressed
@@ -341,19 +373,13 @@ next:
   ;Wait for user to press enter, and restore the character set
  pla			; pull acc from stack
  sta $9005 		; store in char mem
- lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp f5		 ; check if Q is pressed -> quit
- bne top		 ;continue input
-quit:
- jsr $e55f       ; clear screen before exiting
- brk			 ; quit
+ jmp top		 ;continue input
 
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
 ;that we aren't just seeing W,A,S,D being typed without the code
 ;working.
 attack:
  lda #$87		 	; f# (175)
-  ;jsr $ffd2
  sta $900b			 ; store sound
  rts
 
@@ -1054,7 +1080,8 @@ draw_num_enemies:	dc.b 0
 door_sprite       dc.b $5b
 col_mid           dc.b #$0a
 isCollision		dc.b #$00
-titleName:		dc.b #02, #15, #15, #16	;boop
+titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
 titleAuthorsEnd
+;in future: full names, etc.
