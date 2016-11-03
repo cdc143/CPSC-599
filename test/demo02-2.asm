@@ -47,6 +47,37 @@
  sta $900e		; set sound bits/turn on volume (see)
  ;changes the char_colour of text -> page 173 vic manual
 
+ ;we can put music and stuff
+ ;tbh, I have no idea what is going on with drawing to screen.  Totally
+ ;screwed up right now.  Make a new title screen!
+titleScreen:
+ jsr $e55f
+ lda #$08	;black
+ sta $900f		 		; store in screen and border register
+ ldx #$78			;screen coord; too lazy to call a subroutine
+ ldy #titleName-titleNameEnd 
+drawTitleLoop:
+ lda titleName,x
+ jsr drawToScreen
+ dey
+ dex
+ cpy #$00
+ bne drawTitleLoop
+ ldx #$8e
+ ldy #titleAuthors-titleAuthorsEnd
+drawAuthorLoop:
+ lda titleAuthors,x
+ jsr drawToScreen
+ dey
+ dex
+ cpy #$00
+ bne drawAuthorLoop
+titleInput:
+ lda $00c5
+ cmp f3
+ bne titleInput
+ 
+
 gameLoopTop:
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
@@ -213,10 +244,8 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  cmp f5 ;quit
  beq quitBounce
  cmp f1 ;f1 to restart
- beq gameLoopTopBounce
  bne gameOverEnd
-gameLoopTopBounce:
- jmp gameLoopTop
+ jmp titleScreen
 
 initEnemyLocation:
   jsr getRandom
@@ -999,8 +1028,9 @@ w:						dc.b #9
 a:							dc.b #17
 s:							dc.b #41
 d:							dc.b #18
-f5:							dc.b #55
 f1:						dc.b #39
+f3:				dc.b #47
+f5:							dc.b #55
 p1_sprite:				dc.b #81		;81 = circle
 lives_sprite:			dc.b #83		;heart
 enemy_sprite:		dc.b #87		;circle
@@ -1024,3 +1054,7 @@ draw_num_enemies:	dc.b 0
 door_sprite       dc.b $5b
 col_mid           dc.b #$0a
 isCollision		dc.b #$00
+titleName:		dc.b #02, #15, #15, #16	;boop
+titleNameEnd
+titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
+titleAuthorsEnd
