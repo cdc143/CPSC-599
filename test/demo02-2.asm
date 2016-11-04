@@ -631,12 +631,12 @@ portalAnimTop:
  jmp gameLoopTop
 
 drawCharacter:
+ lda char_colour
+ sta graphics_colour
  ldy col_bot
  cpy #$01
  beq drawBottom
  jsr getRowColForm
- lda char_colour
- sta graphics_colour
  lda p1_sprite		; 'B'
  bcs drawBottom
  bcc drawTop
