@@ -54,13 +54,13 @@
  ldx #$00
  ldy #$00
  jsr $ffbd	;initialize clock
+ lda char_colour
+ sta graphics_colour
 titleScreen:
  jsr $e55f		;clear screen
  lda #$0f		;temporary colour start
  sta temp_colour
  jsr loadLevel3 	;load level 3 to screen
-
-titleScreenTop
  ldx #$90			;screen coord for title; too lazy to use x,y coords
  ldy #titleNameEnd-titleName-1	;length
 drawTitleLoop:		;draw title to screen
@@ -87,6 +87,7 @@ drawTitleAnimation:	;this is a loop because don't need to constantly redraw titl
  cmp #$01		
  bne titleInput
  dec temp_colour	;random colour, pretty much
+ inc graphics_colour
  ;lda temp_colour	;this code does checking, but don't necessarily need it	
 					;unless we want certain screen colours
  ;cmp #$00
@@ -122,8 +123,6 @@ gameLoopTop:
  jsr timerLoop
  ;Setup new location for characters
  jsr $e55f       		; clear screen
- lda char_colour		; load new char_colour to acc
- sta $0286		 		; change text char_colour
 
 ;changes the border and background char_colour -> page 175 of vic do manual
  lda screen_colour		 ; 0f ->this makes a green border and black background
@@ -257,10 +256,10 @@ loadLevel4End:
  rts
 
 drawLives:		;draw lives to screen
- lda lives_sprite
- sta graphics_top,x
  lda life_colour
- sta char_colour_loc_top,x
+ sta graphics_colour
+ lda lives_sprite
+ jsr drawToScreen
  dex
  cpx #$00
  bne drawLives
@@ -272,15 +271,28 @@ getRandom:
  sta seed
  rts
 
-gameOver: ;
+gameOver: 
 ;TODO: Print "Game over"
- ;jsr $e55f
  lda #$3e		 ; this makes a green border and black background
  sta $900f		 ; store in screen and border register
+gameOverScreenTop:
+ ldx #$93			;screen coord for title; too lazy to use x,y coords
+ ldy #gameOverMessageEnd-gameOverMessage-1	;length
+ lda #$00
+ sta graphics_colour
+gameOverScreenLoop:		;draw title to screen
+ lda gameOverMessage,y
+ jsr drawToScreen
+ dey		;length -1
+ dex		;index -1
+ cpy #$00
+ bpl gameOverScreenLoop
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
+ lda $00c5			;check for start.  Only can press start right now. Probably should 
+ sta current_key
  jsr checkRestartQuit
- bne gameOverEnd
+ jmp gameOverEnd
 
 initEnemyLocation:
   jsr getRandom
@@ -289,13 +301,11 @@ initEnemyLocation:
   cmp space_sprite
   bne initEnemyLocation
   lda enemy_sprite
-  ;sta graphics_bot,x
   sta graphics_playfield_start,x ;potential problem/not problem: enemies
 							;can only spawn 255 spaces past graphics_playfield_start
   lda char_colour
   adc #$10
   sta color_playfield_start,x
-  ;sta char_colour_loc_bot,x
   dec draw_num_enemies
   ldy draw_num_enemies
   cpy #$00
@@ -312,6 +322,7 @@ initChars:
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ 
 ;player -> this assumes that it is done before this subroutine is done.
  ldx lives	;load index of where to draw lives to screen
 ;these lines are here so that they refresh the screen every time
@@ -326,10 +337,13 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  sta draw_num_enemies
  jsr initEnemyLocation
  jsr getRowColForm
+ lda char_colour
+ sta graphics_colour
  lda p1_sprite		; 'B'
- sta graphics_top,x	; store far left second row
- lda char_colour		;black/initializing character location on row (just convenience that it's also black)
- sta char_colour_loc_top,x		; char char_colour
+ jsr drawToScreen
+ ;sta graphics_top,x	; store far left second row
+ ;lda char_colour		;black/initializing character location on row (just convenience that it's also black)
+ ;sta char_colour_loc_top,x		; char char_colour
  pla			; pull acc from stack
  sta $9005		; store in char memory
 
@@ -462,9 +476,6 @@ updateDown:
 
 updateNewLoc:
  jsr getRowColForm	;get row/col
- ;lda col_bot		;check if in second half of screen
- ;cmp #$00
- ;bne updateNewLocBot
  jsr collision	; collision detection
  rts			; return
 
@@ -624,6 +635,8 @@ drawCharacter:
  cpy #$01
  beq drawBottom
  jsr getRowColForm
+ lda char_colour
+ sta graphics_colour
  lda p1_sprite		; 'B'
  bcs drawBottom
  bcc drawTop
@@ -647,13 +660,13 @@ drawTop:
 
 drawToScreen:
  sta graphics_top,x	; store space
- lda char_colour		; char_colour to black
+ lda graphics_colour		; char_colour to black
  sta char_colour_loc_top,x	; store char_colour in new location too
  rts
 
 drawToScreenBot:
  sta graphics_bot,x	; store space
- lda char_colour		; char_colour to black
+ lda graphics_colour		; char_colour to black
  sta char_colour_loc_bot,x	; store char_colour in new location too
  rts
 
@@ -661,6 +674,8 @@ collAnimationLoop:
  jsr collMovementCheck
  jsr checkColBot
  jsr collisionAnimation
+ lda coll_char_colour
+ sta graphics_colour
  lda space_sprite
  ldy col_bot
  cpy #$01
@@ -726,19 +741,19 @@ col_bot_set_0:
 
 collisionAnimation:
  jsr getRowColForm
- lda p1_sprite
  ldy col_bot
  cpy #$01
  beq storeNewCollBot
- sta graphics_top,x	; store in new index
- lda coll_char_colour		    ; char_colour
- sta char_colour_loc_top,x	; store char_colour
+ lda coll_char_colour
+ sta graphics_colour
+ lda p1_sprite
+ jsr drawToScreen
  jmp collAnimNext
 storeNewCollBot:
+ lda coll_char_colour
+ sta graphics_colour
  lda p1_sprite;#$02
- sta graphics_bot,x	; store in new index
- lda coll_char_colour		    ; char_colour
- sta char_colour_loc_bot,x	; store char_colour
+ jsr drawToScreenBot
 collAnimNext:
  lda #$40;#$6e		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -1048,6 +1063,7 @@ char_colour:			dc.b #$55
 wall_colour:			dc.b #$44
 life_colour:			dc.b 2
 screen_colour:		dc.b #$0f
+graphics_colour: 	dc.b 0
 timer_loop:			dc.b 0
 coll_char_colour:	dc.b 0
 w:						dc.b #9
@@ -1084,4 +1100,6 @@ titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
 titleAuthorsEnd
+gameOverMessage: dc.b #07, #01, #13, #05, #32, #15, #22, #05, #18, #33
+gameOverMessageEnd 
 ;in future: full names, etc.
