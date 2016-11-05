@@ -101,6 +101,7 @@ drawTitleAnimation:	;this is a loop because don't need to constantly redraw titl
  ;jsr initEnemyLocation
 titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should 
+ sta current_key
  cmp f3
  beq gameLoopTop
  jsr checkRestartQuit
@@ -155,6 +156,8 @@ gameLoopTop:
 ;2) iterate through level array until hit 8th byte (door draw)
 ;3) 8th byte checks and draws doors (or other)
 
+;code from 159-248 is total cowboy code.  Please make it pretty. <3
+
 iterateLevelLoop:		;check for wall or space 0 = space, 1 = wall
  lda current_level_part
  and #$01				;lsb
@@ -171,19 +174,32 @@ iterateLevelLoopDrawWall:		;space
  sta level_char
  rts
  
+drawWall:
+ ldy col_bot
+ cpy #$01
+ beq drawWallBottom
+ bne drawWallTop
+ 
 drawWallBottom:		;draws to bottom half of screen (doesn't work)
-;jsr getRowColForm
+ ;jsr getRowColForm
+ lda level_char
  jsr drawToScreenBot
  rts
 drawWallTop:
+ lda level_char
  jsr drawToScreen
  rts
 
 iterateLevelLoopDrawCharacter:	;draws walls (doesn't work for bottom)
  jsr getRowColForm
- lda level_char
- bcs drawWallBottom
- bcc drawWallTop
+ cpx #$00
+ bne iLColBot
+ ldy #$01
+ sty col_bot
+iLColBot:
+ cpy #$01
+ beq drawWall
+ bne drawWall
  
 drawRow:		;draws 3 rows because 22/7 bits = 3 blocks per bit with one extra 
  jsr iterateLevelLoop
@@ -199,6 +215,7 @@ drawRow:		;draws 3 rows because 22/7 bits = 3 blocks per bit with one extra
 loadLevel1: 
  ldx #$00
  stx row	;index
+ stx col_bot
  inx
  stx col	;one down so that can have a status bar
  dex
@@ -206,8 +223,6 @@ loadLevel1:
  ldx index
  lda level11Top,x
  sta current_level_part
- ;lda #$02
- ;sta col_bot	;using col_bot as a counter for column 
 loadLevel1Index:
  lda current_level_part		;current row
 drawRowLoop:
@@ -216,16 +231,20 @@ drawRowLoop:
  lda row
  cmp #$15			;check if end of row
  bne loadLevel1Index		;not end of row
- inc index			;index of current level
+ lda #$00
+ sta row		;reset row
+ ldx index
+ lda level11Top,x
+ sta current_level_part
+ lda #$00
  inc col			;down one col
+ inc index			;index of current level
  ldx index 
  cpx #level11End-level11Top-1	;check if end of index
  beq loadLevel1Doors		;draw doors (not implemented yet, use 8th byte for that)
  lda level11Top,x		;next row byte
  sta current_level_part
- lda #$00
- sta row		;reset row
- clc
+ clc				;just here to branch always
  bcc loadLevel1Index		;branch always
 loadLevel1Doors:
  rts
@@ -912,7 +931,10 @@ check6:
 ;rows stored as 7 bits, 0xxxxxxx (can use the msb for other data) because 22/7 = 3 blocks per bit
 ;7 bytes for floor (same principle as above for columns)
 ;use 8th byte for data such as items in room, door direction, etc
-level11Top: dc.b $41, $41, $7f, $41, $41, $7f, $41, $01
+;level11Top: dc.b $41, $41, $7f, $41, $41, $7f, $41, $01
+level11Top: dc.b $7f, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $41, $7f, $01
+;this isn't 8 bytes, but it turned out funny otherwise.  We can put it down to less bytes and be clever with algorithms, but
+;this still cuts down on a lot of the memory costs
 level11End
 
 level2Top: dc.b $c3, $42, $42, $43, $42, $ff, $ff, $01		;last byte: 0-3 bit, d,u,r,l
@@ -926,6 +948,7 @@ level4Top: dc.b $ff, $81, $81, $81, $81, $81, $ff, $02		;last byte: 0-3 bit, d,u
 level4End
 
 index: dc.b 0
+col_index: dc.b 0
 row:						dc.b 0
 col:						dc.b 0
 col_bot:				dc.b 0
