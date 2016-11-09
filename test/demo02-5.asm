@@ -574,19 +574,19 @@ moveEnemy:
   cmp row
   beq checkColumn
   bcc rowLess
-  dec enemyxpos
+  dec enemyxpos,x
   bpl end
 rowLess:
-  inc enemyxpos
+  inc enemyxpos,x
   bpl end
 checkColumn
   cmp col
   beq end
   bcc columnLess
-  dec enemyypos
+  dec enemyypos,x
   bpl end
 columnLess:
-  inc enemyypos
+  inc enemyypos,x
 end:
   rts
 
