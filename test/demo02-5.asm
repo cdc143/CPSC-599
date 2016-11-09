@@ -306,10 +306,26 @@ initEnemyLocation:
   lda char_colour
   adc #$10
   sta color_playfield_start,x
+  jsr convertOffset
   dec draw_num_enemies
   ldy draw_num_enemies
   cpy #$00
   bne initEnemyLocation
+  rts
+
+convertOffset:
+  txa
+  ldx draw_num_enemies
+  dex
+divisionLoop:
+  tay
+  sbc #$09
+  bcc remainder
+  inc enemyypos,x
+  bpl divisionLoop
+remainder:
+  tya
+  sta enemyxpos,x
   rts
 
 gameOverEndBounce:
@@ -337,7 +353,6 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  lda #$01
  sta draw_num_enemies
  jsr initEnemyLocation
- jsr getRowColFormEnemy
  lda char_colour
  sta graphics_colour
  lda p1_sprite		; 'B'
@@ -554,20 +569,25 @@ getRowColForm:		;get coord in row +column
  tax
  rts
 
-getRowColFormEnemy:		;get coord in row +column (enemy)
-  ldy #$00
-  ;Take offset from graphics start (x)
-  ;Subtract 22 from x and store prev x value
-  ;if not negative, inc row
-  ;add on remainder to col
-  rts
 moveEnemy:
-  ;Get enemy x pos
-  ;If less than players x pos, move right
-  ;If greater, move left
-  ;Get enemy y pos
-  ;If greater, move down
-  ;If less, move up
+  lda enemyxpos
+  cmp row
+  beq checkColumn
+  bcc rowLess
+  dec enemyxpos
+  bpl end
+rowLess:
+  inc enemyxpos
+  bpl end
+checkColumn
+  cmp col
+  beq end
+  bcc columnLess
+  dec enemyypos
+  bpl end
+columnLess:
+  inc enemyypos
+end:
   rts
 
 addCols:		;converts to row spacing
@@ -1123,3 +1143,4 @@ enemystatus: dc.b 0,0,0,0
 enemyypos: dc.b 0,0,0,0
 enemyxpos: dc.b 0,0,0,0
 ;in future: full names, etc.
+temp dc.b 0
