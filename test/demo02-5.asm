@@ -318,16 +318,16 @@ convertOffset:
   ldx draw_num_enemies
   dex
 divisionLoop:
-  tay
+  tay ;D1
   sec
   sbc #$16 ;Subtract 22
   cmp #$00
   bmi remainder
-  inc enemyypos,x
+  inc enemyypos
   bpl divisionLoop
 remainder:
   tya
-  sta enemyxpos,x
+  sta enemyxpos
   rts
 
 gameOverEndBounce:
@@ -405,6 +405,7 @@ next:
   ;Wait for user to press enter, and restore the character set
  pla			; pull acc from stack
  sta $9005 		; store in char mem
+ jsr moveEnemy
  jmp top		 ;continue input
 
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
@@ -572,23 +573,23 @@ getRowColForm:		;get coord in row +column
  rts
 
 moveEnemy:
-  ;lda enemyxpos
-  ;cmp row
-  ;beq checkColumn
-  ;bcc rowLess
-  ;dec enemyxpos,x
-  ;bpl end
+  lda enemyxpos
+  cmp row
+  beq checkColumn
+  bcc rowLess
+  dec enemyxpos,x
+  bpl end
 rowLess:
-  ;inc enemyxpos,x
-  ;bpl end
+  inc enemyxpos,x
+  bpl end
 checkColumn
-  ;cmp col
-  ;beq end
-  ;bcc columnLess
-  ;dec enemyypos,x
-  ;bpl end
+  cmp col
+  beq end
+  bcc columnLess
+  dec enemyypos,x
+  bpl end
 columnLess:
-  ;inc enemyypos,x
+  inc enemyypos,x
 end:
   rts
 
