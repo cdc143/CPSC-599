@@ -319,8 +319,10 @@ convertOffset:
   dex
 divisionLoop:
   tay
-  sbc #$09
-  bcc remainder
+  sec
+  sbc #$16 ;Subtract 22
+  cmp #$00
+  bmi remainder
   inc enemyypos,x
   bpl divisionLoop
 remainder:
@@ -570,23 +572,23 @@ getRowColForm:		;get coord in row +column
  rts
 
 moveEnemy:
-  lda enemyxpos
-  cmp row
-  beq checkColumn
-  bcc rowLess
-  dec enemyxpos,x
-  bpl end
+  ;lda enemyxpos
+  ;cmp row
+  ;beq checkColumn
+  ;bcc rowLess
+  ;dec enemyxpos,x
+  ;bpl end
 rowLess:
-  inc enemyxpos,x
-  bpl end
+  ;inc enemyxpos,x
+  ;bpl end
 checkColumn
-  cmp col
-  beq end
-  bcc columnLess
-  dec enemyypos,x
-  bpl end
+  ;cmp col
+  ;beq end
+  ;bcc columnLess
+  ;dec enemyypos,x
+  ;bpl end
 columnLess:
-  inc enemyypos,x
+  ;inc enemyypos,x
 end:
   rts
 
@@ -1117,6 +1119,8 @@ wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
 row_begin:			dc.b #$00
+enemyypos:      dc.b 0
+enemyxpos:      dc.b 0
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$14
 row_mid_left:		dc.b #$0f
@@ -1140,7 +1144,5 @@ titleAuthorsEnd
 gameOverMessage: dc.b #07, #01, #13, #05, #32, #15, #22, #05, #18, #33
 gameOverMessageEnd
 enemystatus: dc.b 0,0,0,0
-enemyypos: dc.b 0,0,0,0
-enemyxpos: dc.b 0,0,0,0
 ;in future: full names, etc.
 temp dc.b 0
