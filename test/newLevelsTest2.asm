@@ -133,7 +133,7 @@ gameLoopTop:
 
 ;code from 159-248 is total cowboy code.  Please make it pretty. <3
 levToporBot:
- lda lev_row
+ lda lev_byte
  cmp #$23;#$0b	;check if top or bottom of row ;#$24
  beq checkLorR
  bpl levBot
@@ -329,16 +329,16 @@ timer:
 ;first three bytes store row layout: bits 0-1 of 3rd byte indicate whether
 ;there is a door (0 bit) or whether there is a portal (1 bit) -> value will be
 ;between 1-15 (not considering 0, 0 is considered no portal or door)
-level1Top: 	dc.b $ff, $ff, $bf, $80, $00, $0b,
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b   
-			dc.b $80, $00, $0b, $80, $00, $0b
-			dc.b $80, $00, $0b, $ff, $ff, $bf
+level1Top: 	dc.b $ff, $ff, $bf, $0b, $00, $80
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80   
+			dc.b $0b, $00, $80, $0b, $00, $80
+			dc.b $0b, $00, $80, $ff, $ff, $ff
 level1End
 
 level2Top: dc.b $c3, $42, $42, $43, $42, $ff, $ff, $01		;last byte: 0-3 bit, d,u,r,l
