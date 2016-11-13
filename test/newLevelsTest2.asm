@@ -1,33 +1,4 @@
-;Test 02 for level
-
-;Enimies no longer spawn outside of playfield
-;Changed the way playfield is put into memory. Makes collision detection WAYY easier
-;Seems to have broken most coloring code
-;Code to color enemies broke somehow
-;TODO: Fix how level is loaded - doesn't look like test 0
-;get character moving to bottom screen
-;collision animation - prevent character from breaking wall - FIXED (But code is trashy)
-;loselife activated because players drop all over screen because updatePrev doesn't draw
-;over them -Solved (somehow)?
-;player runs over walls on bottom; TODO: collision detection
-
-;Things added: lives at top left
-;lost lives if collide with enemy (circle)
-;changed icon of characters
-;ability to reset game if F1 pressed
-;die after run out of lives
-;character is moving around bottom, super duper glitchy and not well implemented
-
-;Oct 27, 2016: TODO
-;random enemies onto screen -> maybe moving
-;fix collision detection for bottom
-;fix collision animation bottom -> no disappearing walls, player
-;is not removed every part, bottom-top movement/top-bottom movement
-;;collision animation edge detection -> not going off screen
-;using the carry bit for movement up and down
-;make a game loop -> character moves, enemy moves, ...
-;dasm -> header for smaller files?
-;macros
+;test for a more memory-efficient level design
 
   ;Oct 24, 2016
  processor 6502
@@ -124,25 +95,21 @@ retRestQuit:
 gameLoopTop:
  brk
 
-;1) load for every bit, three row squares, two col squares (todo: implement col squares part)
-;1.1) bit check lsb, lsr to keep checking 1 = wall, 0 = space
-;1.2) walls are stored as 7 bits 0xxxxxxx (can use msb for somehing else other than wall data, perhaps door)
-;1.3 level stored as 7 bytes, 8th byte for extra data (doors, maybe enemies or items in room)
-;2) iterate through level array until hit 8th byte (door draw)
-;3) 8th byte checks and draws doors (or other)
+;each level stored as 3 bytes-last two bits of 3rd byte ysed for door/portal in location (0-16)
+
 
 ;code from 159-248 is total cowboy code.  Please make it pretty. <3
 levToporBot:
  lda lev_byte
- cmp #$23;#$0b	;check if top or bottom of row ;#$24
- beq checkLorR
+ cmp #$1f ;#$22;#$0b	;check if top or bottom of row ;#$23 (35)
+ beq levTop
  bpl levBot
  bmi levTop	;top row
  rts
 checkLorR:
- lda lev_byte
- cmp #$02
- beq checkLorRBits
+ lda lev_bit_ind
+ cmp #$08
+; beq checkLorRBits
  bpl levBot
  bmi levTop
  
@@ -187,8 +154,8 @@ levDrawSpace:
  jsr levToporBot
  lda space_sprite
  cpy #$01
- bne drawLevTop
- beq drawLevBottom
+ beq drawLevTop
+ bne drawLevBottom
  rts
  
 levLoadMain:
@@ -196,33 +163,26 @@ levLoadMain:
  stx lev_index
  stx lev_bit
  stx lev_byte
- stx lev_row
 levLoadMainLoop:
- ;ldx lev_row
- ;lda level1Top,x
  lda #$00
- sta lev_bit_ind
  sta lev_byte 
+ sta byte_index
 iterateBytes:
  lda #$00
  sta lev_bit_ind
- ;lda lev_row
- ;clc
- ;adc lev_byte
  ldx lev_byte
- ;tax
  lda level1Top,x
  sta lev_bit
 iterateBits:	;iterating bits seems to work
- lda lev_byte
+ lda byte_index
  cmp #$02
  bne iterateBitsNormal
  lda lev_bit_ind
  cmp #$06
- bpl iterateBitsEnd
+ bpl itBitsEnd
 iterateBitsNormal:
  lda lev_bit
- and #$01	;10000000
+ and #$01	;00000001 NOTE: bit pattern will be reversed on screen, so arrange bits accordingly
  cmp #$00
  bne iterateBitsWall
  jsr levDrawSpace
@@ -238,23 +198,18 @@ iterateBitsEnd:
  lda lev_bit_ind
  cmp #$08
  bne iterateBits
+itBitsEnd:
+ inc byte_index
+ lda byte_index
+ cmp #$03
+ bne levelEndCheck
+ lda #$00
+ sta byte_index
+levelEndCheck:
  inc lev_byte
  lda lev_byte
- cmp #level1End-level1Top-1
-; cmp #$42	;check if third byte
+ cmp #level1End-level1Top
  bne iterateBytes
-;iterate through 4 bytes per row
-;iterate through 8 bits per byte - draw depending on 0 or 1-1
-;for 3rd bit, check last 2 bytes to see if portal (1) or door (0) location
-  
-;draw doors or portal based on third byte
-; inc lev_row	;increment by 3 because three bytes per row
-; inc lev_row
-; inc lev_row
-; lda lev_row
-; cmp #$42
- ;cmp #level1End-level1Top-1
-; bne levLoadMainLoop
  rts
 
 getRowColForm:		;get coord in row +column
@@ -329,31 +284,23 @@ timer:
 ;first three bytes store row layout: bits 0-1 of 3rd byte indicate whether
 ;there is a door (0 bit) or whether there is a portal (1 bit) -> value will be
 ;between 1-15 (not considering 0, 0 is considered no portal or door)
-level1Top: 	dc.b $ff, $ff, $bf, $0b, $00, $80
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80   
-			dc.b $0b, $00, $80, $0b, $00, $80
-			dc.b $0b, $00, $80, $ff, $ff, $ff
+level1Top: 	dc.b $00, $00, $00
+			dc.b $ff, $ff, $bf, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $ff, $ff, $bf
 level1End
-
-level2Top: dc.b $c3, $42, $42, $43, $42, $ff, $ff, $01		;last byte: 0-3 bit, d,u,r,l
-level2End
-
-level3Top: dc.b $ff, $81, $81, $81, $81, $81, $ff, $06		;last byte: 0-3 bit, d,u,r,l
-level3End
-
-
-level4Top: dc.b $ff, $81, $81, $81, $81, $81, $ff, $02		;last byte: 0-3 bit, d,u,r,l
-level4End
 
 row: dc.b 0
 col: dc.b 0
 lev_byte:	dc.b 0
+byte_index: dc.b 0
 lev_bit: dc.b 0
 lev_row: dc.b 0
 lev_index: dc.b 0
