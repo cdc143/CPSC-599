@@ -31,9 +31,10 @@ titleScreen:
  jsr $e55f		;clear screen
  lda #$0f		;temporary colour start
  sta temp_colour
- jsr levLoadMain 	;load level 3 to screen
- lda temp_colour
  sta $900f
+ jsr levLoadMain 	;load level 3 to screen
+ ;lda temp_colour
+ ;sta $900f
  ldx #$90			;screen coord for title; too lazy to use x,y coords
  ldy #titleNameEnd-titleName-1	;length
 drawTitleLoop:		;draw title to screen
@@ -58,7 +59,7 @@ drawTitleAnimation:	;this is a loop because don't need to constantly redraw titl
  jsr $ffde 		;read clock
  cmp #$01		
  bne titleInput
- sec
+ sec	;set carry bit
  dec temp_colour	;random colour, pretty much
  lda temp_colour
  sta $900f		 		; store in screen and border register  
@@ -96,73 +97,11 @@ gameLoopTop:
  brk
 
 ;each level stored as 3 bytes-last two bits of 3rd byte ysed for door/portal in location (0-16)
-
-
-;code from 159-248 is total cowboy code.  Please make it pretty. <3
-levToporBot:
- lda lev_byte
- cmp #$1f ;#$22;#$0b	;check if top or bottom of row ;#$23 (35)
- beq levTop
- bpl levBot
- bmi levTop	;top row
- rts
-checkLorR:
- lda lev_bit_ind
- cmp #$08
-; beq checkLorRBits
- bpl levBot
- bmi levTop
- 
-checkLorRBits:
- lda lev_bit
- and #$0f	;check if any bits are being drawn on second half
- cmp #$00
- bne levTop
-levBot:
- ldy #$00
- rts
- 
-levTop:
- ldy #$01
- rts
- 
-drawLevTop:
- ldx lev_index
- jsr drawToScreen
- rts
- 
-drawLevBottom:
- ldx lev_index
- jsr drawToScreenBot
- rts
- 
-levDrawWall:
- jsr levToporBot
+levLoadMain:
  lda wall_colour
  sta graphics_colour
- lda wall_sprite
- cpy #$01
- beq drawLevTop
- bne drawLevBottom
- ;check y reg to see if 1 or 0 (1 = top, 0 = bot)
- ;load wall into acc
- ;load wall colour into acc
- ;draw to screen
- rts
- 
-levDrawSpace:
- jsr levToporBot
- lda space_sprite
- cpy #$01
- beq drawLevTop
- bne drawLevBottom
- rts
- 
-levLoadMain:
  ldx #$00
  stx lev_index
- stx lev_bit
- stx lev_byte
 levLoadMainLoop:
  lda #$00
  sta lev_byte 
@@ -179,11 +118,11 @@ iterateBits:	;iterating bits seems to work
  bne iterateBitsNormal
  lda lev_bit_ind
  cmp #$06
- bpl itBitsEnd
+ bpl doorOrPortal
 iterateBitsNormal:
  lda lev_bit
  and #$01	;00000001 NOTE: bit pattern will be reversed on screen, so arrange bits accordingly
- cmp #$00
+ ;cmp #$00
  bne iterateBitsWall
  jsr levDrawSpace
  jmp iterateBitsEnd
@@ -202,9 +141,9 @@ itBitsEnd:
  inc byte_index
  lda byte_index
  cmp #$03
- bne levelEndCheck
+ bne levelEndCheck	;don't reset byte index
  lda #$00
- sta byte_index
+ sta byte_index	;reset byte index
 levelEndCheck:
  inc lev_byte
  lda lev_byte
@@ -212,6 +151,81 @@ levelEndCheck:
  bne iterateBytes
  rts
 
+;this is where doors are being drawn
+;limitations: only draws from 0-3 spaces from current location
+doorOrPortal:
+ lda lev_bit	;this will have pattern 0000000x
+ cmp #$00		;bitmask
+ beq itBitsEnd
+ lda lev_index
+ sec
+ sbc lev_bit	;subtracts so that does get drawn over
+ tax
+ jsr levDrawDoor
+ ;rts
+ jmp itBitsEnd
+ 
+;code from 159-248 is total cowboy code.  Please make it pretty. <3
+levToporBot:
+ ldy lev_byte
+ cpy #$22 ;#$22;#$0b	;check if top or bottom of row ;#$23 (35)
+ beq checkLorR
+ bpl levBot
+ bmi levTop	;top row
+ rts
+ 
+checkLorR:		;this check is for crossover from top to bottom
+ ldy lev_bit_ind
+ cpy #$06		;Need to check if on 6th or 7th bit (0-7) 
+ bpl levBot		;is on bottom
+ bmi levTop
+ rts
+
+levBot:
+ ldy #$00
+ rts
+ 
+levTop:
+ ldy #$01
+ rts
+ 
+drawLevTop:
+ ;ldx lev_index
+ jsr drawToScreen
+ rts
+ 
+drawLevBottom:
+ ;ldx lev_index
+ jsr drawToScreenBot
+ rts
+ 
+levDrawDoor:
+ lda door_sprite
+ jsr levDrawSprite
+ rts
+ 
+levDrawWall:
+ ldx lev_index
+ lda wall_sprite
+ jsr levDrawSprite
+ ;check y reg to see if 1 or 0 (1 = top, 0 = bot)
+ ;load wall into acc
+ ;load wall colour into acc
+ ;draw to screen
+ rts
+ 
+levDrawSpace:
+ ldx lev_index
+ lda space_sprite
+ jsr levDrawSprite
+ rts
+
+levDrawSprite:
+ jsr levToporBot
+ cpy #$01
+ beq drawLevTop
+ bne drawLevBottom
+ 
 getRowColForm:		;get coord in row +column
  ldy #$00
  ldx col
@@ -287,16 +301,19 @@ timer:
 level1Top: 	dc.b $00, $00, $00
 			dc.b $ff, $ff, $bf, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $60
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $60
+			dc.b $01, $00, $20, $01, $00, $20
+			dc.b $01, $00, $20, $01, $00, $60
 			dc.b $01, $00, $20, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $ff, $ff, $bf
+			dc.b $01, $00, $20, $ff, $ff, $ff
+			dc.b $00, $00, $00, $00, $00, $00
 level1End
 
+;levelTop: dc.b 0
+;levelEnd: dc.b 0 
 row: dc.b 0
 col: dc.b 0
 lev_byte:	dc.b 0
@@ -328,7 +345,7 @@ enemy_sprite:		dc.b #87		;circle
 wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
-
+door_sprite: dc.b $5b
 titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
