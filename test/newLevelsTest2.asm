@@ -117,8 +117,13 @@ iterateBits:	;iterating bits seems to work
  cmp #$02
  bne iterateBitsNormal
  lda lev_bit_ind
+ cmp #$05
+ ;bpl itBitsEnd
+ beq doorOrPortal
+ ;lda lev_bit_ind 
  cmp #$06
- bpl doorOrPortal
+; bpl doorOrPortal
+  bpl itBitsEnd
 iterateBitsNormal:
  lda lev_bit
  and #$01	;00000001 NOTE: bit pattern will be reversed on screen, so arrange bits accordingly
@@ -132,6 +137,7 @@ iterateBitsWall:
  ;draw wall or space
 iterateBitsEnd:
  inc lev_index
+ clc		;here just in case carry bit rotates in? It shouldn't do that though
  lsr lev_bit
  inc lev_bit_ind
  lda lev_bit_ind
@@ -149,21 +155,53 @@ levelEndCheck:
  lda lev_byte
  cmp #level1End-level1Top
  bne iterateBytes
+ jsr randPortal
  rts
 
-;this is where doors are being drawn
-;limitations: only draws from 0-3 spaces from current location
+;for some reason this works, kind of.  It shouldn't work.  
+;Also, it draws doors for every row, which is wrong
+;currently in x: lev_index
 doorOrPortal:
  lda lev_bit	;this will have pattern 0000000x
  cmp #$00		;bitmask
- beq itBitsEnd
- lda lev_index
+ beq iterateBitsNormal
+ ;ldx lev_index <- I want this here, but it screws up when I uncomment it
+ lda lev_bit
+			;my thoughts are that a carry bit is being rotated in, or something
+ cmp #$01 ;for some reason all lines are 000000001, except for a couple
+			;WHY DOES THE TOP ROW THINK IT GETS A DOOR?! It's identical to
+			; bottom two rows, but bottom rows behave properly
+			
+ beq drawLeft	;=2
+ bpl drawRight	;<2
+ ;txa	;middle
+ ;sec
+ ;sbc #$0d
+ jmp drawRight
+drawLeft:
+ txa
  sec
- sbc lev_bit	;subtracts so that does get drawn over
+ sbc #$18
+drawRight:
+ clc
+ adc #$04
  tax
  jsr levDrawDoor
  ;rts
- jmp itBitsEnd
+ jmp iterateBitsNormal
+
+randPortal:
+ jsr getRandom
+ lda seed
+ cmp #$05
+ bmi randPortalEnd
+ cmp #$dc	;in bounds
+ bpl randPortalEnd
+ tax
+ lda portal_sprite
+ jsr drawToScreenBot	;just draws to bottom of screen
+randPortalEnd:
+ rts
  
 ;code from 159-248 is total cowboy code.  Please make it pretty. <3
 levToporBot:
@@ -225,6 +263,12 @@ levDrawSprite:
  cpy #$01
  beq drawLevTop
  bne drawLevBottom
+ 
+getRandom:
+ lda seed
+ adc $9003 ;add random number from raster memory (can change this to somewhere else if needed)
+ sta seed
+ rts
  
 getRowColForm:		;get coord in row +column
  ldy #$00
@@ -298,18 +342,18 @@ timer:
 ;first three bytes store row layout: bits 0-1 of 3rd byte indicate whether
 ;there is a door (0 bit) or whether there is a portal (1 bit) -> value will be
 ;between 1-15 (not considering 0, 0 is considered no portal or door)
-level1Top: 	dc.b $00, $00, $00
-			dc.b $ff, $ff, $bf, $01, $00, $20
+level1Top: 	dc.b $00, $00, $00, $ff, $ff, $3f
+			dc.b $01, $00, $20, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $60
 			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $01, $00, $60
+			dc.b $01, $00, $20, $01, $00, $e0
 			dc.b $01, $00, $20, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $60
 			dc.b $01, $00, $20, $01, $00, $20
 			dc.b $01, $00, $20, $01, $00, $20
-			dc.b $01, $00, $20, $ff, $ff, $ff
-			dc.b $00, $00, $00, $00, $00, $00
+			dc.b $ff, $ff, $3f, $00, $00, $00
+			dc.b $00, $00, $00
 level1End
 
 ;levelTop: dc.b 0
@@ -345,6 +389,7 @@ enemy_sprite:		dc.b #87		;circle
 wall_sprite:			dc.b $66		;weird checkered square thingy
 portal_sprite:			dc.b $7F 		;#209
 space_sprite:			dc.b #32    ;$20
+seed: dc.b #$74
 door_sprite: dc.b $5b
 titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
