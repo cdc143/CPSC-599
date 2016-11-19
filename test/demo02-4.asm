@@ -76,6 +76,64 @@ gameLoopTop:
  stx lives
  jmp initChars
 
+;###########################################################################
+;###########################################################################
+;##########                                                DRAW FUNCTIONS                                                ##########
+;###########################################################################
+;###########################################################################
+					;  used to draw anything in the playfield area (player, walls, enemies, items, doors, portals, etc)
+ 											; takes 4 inputs
+
+											; Accumulator = character you want to draw
+											; X register = the X coordinate for the object to be drawn at (0-21)
+											; Y register = the Y coordinate for the object to be drawn at (0-19)
+											; drawColour = the colour you want the character to be drawn in
+drawToPlayfield:					
+ sta drawChar					; store the Character to draw
+ cpy #$09
+ BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
+ jsr drawMath
+ lda drawChar					; get the character back
+ sta graphics_top,y				; draw it to the screen
+ lda drawColour					; get the colour for the character
+ sta char_colour_loc_top,y	; put the colour on the screen
+ rts
+ 
+drawToPlayfieldBot:			
+ tya									; put Y in Accumulator
+ sbc #$0a							; subtract 10
+ tay									; put Y back
+ jsr drawMath
+ lda drawChar					; get the character back
+ sta graphics_bot,y				; draw it to the screen
+ lda drawColour					; get the colour for the character
+ sta char_colour_loc_bot,y	; put the colour on the screen
+ rts
+ 
+ ; multiplies Y by 22 and adds X to it returns the answer in the Y register
+drawMath:
+ lda #$00								; clear Accumulator
+ cpy #$00								; see if Y is 0 if it is then go to end of method
+ BEQ drawMathEnd
+ cpy #$02
+ BMI drawMathNext				; if Y is less than 2 then go to next part of method
+ lda #$16								; 16 is hex for 22
+drawMathLoop:						
+ dey
+ dey										; decrement y twice
+ asl a									; multiply 22 by 2
+ cpy #$02
+ BPL drawMathLoop				; if Y is more than 2 then loop
+drawMathNext:						; see if there is 1 or 0 Y left to multiply
+ cpy #$01								; see if Y is 0 if it is then go to end of method
+ BMI drawMathEnd
+ adc #$16								; if Y is 1 then add 22
+drawMathEnd:
+ stx Scratch							; put X in memory
+ adc Scratch							; add
+ tay										; put the answer in Y
+ rts
+ 
 loadLevel1:		;default room for now
  ldx #$00					; reset x to use as a loop counter
 loadLevel1Loop1:       ; loop that loads the top half of the level
@@ -1022,3 +1080,8 @@ door_sprite       dc.b $5b
 isCollision		dc.b #$00
 anim_time:		dc.b #$40	;time for animation
 pos_to_compare dc.b 0
+
+;drawToPlayfield vars
+drawChar:				dc.b 0
+drawColour:			dc.b 0
+Scratch:				dc.b 0
