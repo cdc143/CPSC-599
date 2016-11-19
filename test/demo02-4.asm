@@ -158,6 +158,26 @@ drawToStatusBot:
  lda drawColour					; get the colour for the character
  sta status_colour_bot,y		; put the colour on the screen
  rts
+
+;##########                                                GET FROM SCREEN                                                ##########
+;				used to get the character on the playfield from and X, Y location
+;				Takes 2 inputs returns a character in the Accumulator
+;				inputs:		X register = X location
+;								Y register = Y location
+getFromScreen:
+ cpy #$09
+ BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
+ jsr drawMath
+ lda graphics_top,y				; get the character back from the screen
+ rts
+ 
+getFromScreenBot:
+ tya									; put Y in Accumulator
+ sbc #$0a							; subtract 10
+ tay									; put Y back
+ jsr drawMath
+ lda graphics_bot,y				; get the character back from the screen
+ rts
  
 loadLevel1:		;default room for now
  ldx #$00					; reset x to use as a loop counter
