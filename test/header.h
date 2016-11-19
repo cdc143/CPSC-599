@@ -4,3 +4,7 @@ graphics_top equ $1e16
 graphics_bot equ $1ef2
 graphics_playfield_start equ $1e17
 color_playfield_start equ $9617
+status_colour_top equ $9600
+status_colour_bot equ $97ce
+status_loc_top equ $1e00
+status_loc_bot equ $1fce

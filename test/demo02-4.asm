@@ -134,6 +134,31 @@ drawMathEnd:
  tay										; put the answer in Y
  rts
  
+ ; 			Similar to the playfield method it takes 4 inputs 
+ ; 			the only difference is that the Y register is from 0-2
+ ; 						0 = top status bar
+ ;						1 = first bottom status bar (upper)
+ ;						2 = second bottom status bar (lowwer)
+drawToStatus:
+ sta drawChar					; store the Character to draw
+ cpy #$00
+ BMI drawToStatusBot
+ sta status_loc_top,x			; draw it to the screen
+ lda drawColour					; get the colour for the character
+ sta status_colour_top,x		; put the colour on the screen
+ rts
+ 
+drawToStatusBot:
+ tya									; put Y in Accumulator
+ sbc #$01							; subtract 1
+ tay									; put Y back
+ jsr drawMath
+ lda drawChar					; get the character back
+ sta status_loc_bot,y			; draw it to the screen
+ lda drawColour					; get the colour for the character
+ sta status_colour_bot,y		; put the colour on the screen
+ rts
+ 
 loadLevel1:		;default room for now
  ldx #$00					; reset x to use as a loop counter
 loadLevel1Loop1:       ; loop that loads the top half of the level
