@@ -269,10 +269,10 @@ loadLevel3Loop3:
  inx
  lda prow_addr,x
  sta $fe
- sty rowNum
+ sty tempY
  jsr drawPRow
  ;iny
- ;cmp #$16
+ ;cpy #$0c
  ;bne loadLevel3Loop3
  ldx #$0
 loadLevel3Loop2:
@@ -321,19 +321,19 @@ drawLives:		;draw lives to screen
  rts
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
-  tya
-  pha
-  ldy #$00
+  ldx #$00
+  lda life_colour
+  sta drawColour
 drawPRowLoop:
+  ldy yOffset
   lda ($fd),y
-  sta graphics_top,y
-  lda wall_colour
-  sta char_colour_loc_top,y
-  iny
-  cpy #$16
+  ldy tempY
+  jsr drawToPlayfield
+  inx
+  inc yOffset
+  cpx #$15
   bne drawPRowLoop
-  pla
-  tay
+  ldy tempY
   rts
 
 getRandom:
@@ -1175,4 +1175,5 @@ room_addr: dc.b 0,0,0,0,0,0,0,0
 drawChar:				dc.b 0
 drawColour:			dc.b 0
 Scratch:				dc.b 0
-rowNum:        dc.b 0
+tempY:        dc.b 0
+yOffset:      dc.b 0
