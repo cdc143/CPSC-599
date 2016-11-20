@@ -88,7 +88,7 @@ gameLoopTop:
 											; X register = the X coordinate for the object to be drawn at (0-21)
 											; Y register = the Y coordinate for the object to be drawn at (0-19)
 											; drawColour = the colour you want the character to be drawn in
-drawToPlayfield:					
+drawToPlayfield:
  sta drawChar					; store the Character to draw
  cpy #$09
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
@@ -98,8 +98,8 @@ drawToPlayfield:
  lda drawColour					; get the colour for the character
  sta char_colour_loc_top,y	; put the colour on the screen
  rts
- 
-drawToPlayfieldBot:			
+
+drawToPlayfieldBot:
  tya									; put Y in Accumulator
  sbc #$0a							; subtract 10
  tay									; put Y back
@@ -109,7 +109,7 @@ drawToPlayfieldBot:
  lda drawColour					; get the colour for the character
  sta char_colour_loc_bot,y	; put the colour on the screen
  rts
- 
+
  ; multiplies Y by 22 and adds X to it returns the answer in the Y register
 drawMath:
  lda #$00								; clear Accumulator
@@ -118,7 +118,7 @@ drawMath:
  cpy #$02
  BMI drawMathNext				; if Y is less than 2 then go to next part of method
  lda #$16								; 16 is hex for 22
-drawMathLoop:						
+drawMathLoop:
  dey
  dey										; decrement y twice
  asl a									; multiply 22 by 2
@@ -133,8 +133,8 @@ drawMathEnd:
  adc Scratch							; add
  tay										; put the answer in Y
  rts
- 
- ; 			Similar to the playfield method it takes 4 inputs 
+
+ ; 			Similar to the playfield method it takes 4 inputs
  ; 			the only difference is that the Y register is from 0-2
  ; 						0 = top status bar
  ;						1 = first bottom status bar (upper)
@@ -147,7 +147,7 @@ drawToStatus:
  lda drawColour					; get the colour for the character
  sta status_colour_top,x		; put the colour on the screen
  rts
- 
+
 drawToStatusBot:
  tya									; put Y in Accumulator
  sbc #$01							; subtract 1
@@ -170,7 +170,7 @@ getFromScreen:
  jsr drawMath
  lda graphics_top,y				; get the character back from the screen
  rts
- 
+
 getFromScreenBot:
  tya									; put Y in Accumulator
  sbc #$0a							; subtract 10
@@ -178,7 +178,7 @@ getFromScreenBot:
  jsr drawMath
  lda graphics_bot,y				; get the character back from the screen
  rts
- 
+
 loadLevel1:		;default room for now
  ldx #$00					; reset x to use as a loop counter
 loadLevel1Loop1:       ; loop that loads the top half of the level
@@ -229,23 +229,40 @@ loadLevel2End:
 
 loadLevel3:
  ldx #$0
-loadLevel3Loop1:
- lda level3top,x
- sta graphics_top,x
- lda wall_colour
- sta char_colour_loc_top,x
+
+ lda #<level3top ;low byte
+ sta room_addr
+ lda #>level3top
  inx
- cpx #level3topend-level3top
+ sta room_addr,x
+ dex
+ txa
+ asl
+ tax
+ lda room_addr,x
+ sta $fb
+ inx
+ lda room_addr,x
+ sta $fc
+ ldy #$0
+ ldx #$0
+loadLevel3Loop1:
+ lda ($fb),y
+ sta graphics_top,y
+ lda wall_colour
+ sta char_colour_loc_top,y
+ iny
+ cpy #level3topend-level3top
  bne loadLevel3Loop1
  ldx #$0
 loadLevel3Loop2:
- lda level3bottom,x
- sta $1edc,x
- lda wall_colour
- sta $96dc,x
- inx
- cpx #level3bottomend-level3bottom
- bne loadLevel3Loop2
+ ;lda level3bottom,x
+ ;sta $1edc,x
+ ;lda wall_colour
+ ;sta $96dc,x
+ ;inx
+ ;cpx #level3bottomend-level3bottom
+ ;bne loadLevel3Loop2
 loadLevel3End:
  rts
 
@@ -485,7 +502,7 @@ updatePrevLoc:		;updates where player previously was
  jsr getRowColForm
  lda col_bot		;check if bottom or top of screen
  cmp #$01
- bne checkColToTop		
+ bne checkColToTop
  beq checkColToBot
 
 checkColToTop:	;going from bottom to top
@@ -582,7 +599,7 @@ collision:		 ; detect collision between B and C
  sty coll_loop_count	;reg for coll animation
  lda col_bot
  cmp #$01
- beq collision_bot		
+ beq collision_bot
  ldy graphics_top,x	; load current char
  bne collision_compares	;branch instead of using jmp
 collision_bot:
@@ -602,7 +619,7 @@ drawcoll:
  jsr collAnimationLoop
  jsr drawCharacter
  rts
- 
+
 checkPortalOrLevel:
  cpy portal_sprite
  beq portalAnimation
@@ -612,7 +629,7 @@ checkPortalOrLevel:
  jmp initCharsNextLevel	;loads character, lives, and enemies into next level
 notNewLevel:
  rts
- 
+
 portalAnimation:
  jsr $e55f
  lda screen_colour
@@ -643,7 +660,7 @@ drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
  rts
- 
+
 drawBottom:
  jsr getRowColForm
  lda p1_sprite ;#$01
@@ -687,24 +704,24 @@ animLoopNext:
  cpx #$00
  bne collAnimationLoop
  rts
-  
+
 col_bot_set_1:		;sets col_bot to 1
  lda #$01
  sta col_bot
  rts
- 
+
 col_bot_set_0:		;sets col_bot to 0
  lda #$00
  sta col_bot
  rts
- 
+
 check0or1:
  stx pos_to_compare
  cmp pos_to_compare
  bmi col_bot_set_0
  bpl col_bot_set_1
  rts
- 
+
 checkHorizontalColBot:	;animation moves right or left
  ldx #$0e			;check if in middle of row
  jmp check0or1
@@ -759,7 +776,7 @@ collMovementCheck:
  cmp s		 ;s pressed
  beq collDownBounce
  bne collRight ;default
- 
+
 collLeft:		;a pressed
  jsr getRowColForm
  inx
@@ -793,14 +810,14 @@ collRight:	;d pressed
  beq collRet
  dec row
  bne checkCol_Bot_hori	;branch over
-  
+
 set_0:
  jsr col_bot_set_0
  rts
 set_1:
  jsr col_bot_set_1
  rts
- 
+
 collDownBounce:
  jsr collDown
 collRet:
@@ -809,7 +826,7 @@ collRet:
 collUp:	;w pressed
  jsr getRowColForm
  txa
- clc 
+ clc
  adc #$16	;add another row
  tax
  jsr collTop
@@ -833,7 +850,7 @@ checkColV:
 collDown:	;s pressed
  jsr getRowColForm
  txa
- sec 
+ sec
  sbc #$16	;add another row
  tax
  jsr collTop
@@ -844,7 +861,7 @@ collDown:	;s pressed
  beq collRet
  dec col
  bne checkCol_Bot_vert	;this seems to work even though it probably shouldn't
- 
+
 collTop:
  lda col_bot
  cmp #$01
@@ -865,7 +882,7 @@ compareCollRight:
 collTopSet1:
  lda #$01
  rts
- 
+
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
  ldy #$ff		 ; 255 (basically the biggest number possible)
 timer:
@@ -962,7 +979,7 @@ loadLevel:	;loads a level based on random number generator
  jsr loadLevel3
  jsr loadLevel4
  rts
- 
+
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
 level1top:
@@ -1125,6 +1142,7 @@ door_sprite       dc.b $5b
 isCollision		dc.b #$00
 anim_time:		dc.b #$40	;time for animation
 pos_to_compare dc.b 0
+room_addr: dc.b 0,0,0,0,0,0,0,0
 
 ;drawToPlayfield vars
 drawChar:				dc.b 0
