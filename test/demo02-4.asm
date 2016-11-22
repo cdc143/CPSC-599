@@ -279,7 +279,7 @@ loadLevel3Loop3:
  iny
  inc Ycoor
  lda Ycoor
- cmp #$02
+ cmp #$03
  bne loadLevel3Loop3
  ldx #$0
 loadLevel3Loop2:
@@ -339,8 +339,10 @@ drawPRowLoop:
   jsr drawToPlayfield
   inx
   inc yOffset
-  cpx #$15
+  cpx #$16
   bne drawPRowLoop
+  ldy #$00
+  sty yOffset
   ldy tempY
   rts
 
@@ -1097,10 +1099,10 @@ level3bottom:
   dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 level3bottomend
 
-level3: dc.b $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
+level3: dc.b $00,$01,$01
 prow0: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-prow1: dc.b $5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66
+prow1: dc.b $5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+prow2: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66
 prow_addr: dc.b 0,0,0,0,0,0
 
 level4top:
@@ -1184,6 +1186,6 @@ room_addr: dc.b 0,0,0,0,0,0,0,0
 drawChar:				dc.b 0
 drawColour:			dc.b 0
 Scratch:				dc.b 0
-Ycoor:        dc.b #$01
+Ycoor:        dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
