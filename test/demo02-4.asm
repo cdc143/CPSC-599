@@ -278,8 +278,7 @@ loadLevel3Loop3:
  jsr drawPRow
  iny
  inc Ycoor
- lda Ycoor
- cmp #$03
+ cpy #$02 ;try to draw only 2 rows for now
  bne loadLevel3Loop3
  ldx #$0
 loadLevel3Loop2:
@@ -333,18 +332,25 @@ drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   sta drawColour
   sty tempY
 drawPRowLoop:
-  ldy yOffset
-  lda ($fd),y
-  ldy Ycoor
-  jsr drawToPlayfield
+  ldy yOffset ;offset into row data
+  lda ($fd),y ;char to draw
+  ldy Ycoor ; row to draw
+  ;cpy #01
+  ;beq break
+  jsr drawToPlayfield ; draw playfield with char, x=0, y=row
   inx
   inc yOffset
   cpx #$16
   bne drawPRowLoop
   ldy #$00
-  sty yOffset
-  ldy tempY
+  sty yOffset ;reset y offset
+  ldy tempY ;restore callers y reg
   rts
+break:
+  sta $1000 ;Correct values are in regs for drawing second row
+  sty $1001
+  stx $1002
+  brk
 
 getRandom:
  lda seed
@@ -1189,3 +1195,4 @@ Scratch:				dc.b 0
 Ycoor:        dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
+tempX:        dc.b 0
