@@ -66,20 +66,27 @@ gameLoopTop:
  ; ldx #$00
  ; ldy #$00
  ; sty tempY
- 
-; testdrawloop:
+
+; testdrawYloop:
  ; lda wall_sprite
  ; jsr drawToPlayfield
- ; ldy tempX
- ; iny
+ ; ldy tempY
  ; iny
  ; sty tempY
  ; cpy #$14
- ; bmi testdrawloop
+ ; bmi testdrawYloop
+ 
+; testdrawXloop:
+ ; lda wall_sprite
+ ; jsr drawToPlayfield
+ ; ldy tempY
+ ; inx
+ ; cpx #$16
+ ; bmi testdrawXloop
 
- ;ldx init_lives
- ;stx lives
- ;jmp initChars
+ ; ldx init_lives
+ ; stx lives
+ ; jmp initChars
 
  ;############## end of  test code ###############
  ldx #$00
@@ -115,7 +122,7 @@ gameLoopTop:
 drawToPlayfield:
  sta drawChar					; store the Character to draw
  cpy #$0a
- BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
+ BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda drawChar					; get the character back
  sta graphics_top,y				; draw it to the screen
@@ -125,7 +132,7 @@ drawToPlayfield:
 
 drawToPlayfieldBot:
  tya									; put Y in Accumulator
- clc
+ sec
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
@@ -182,15 +189,15 @@ drawToStatusBot:
 ;				inputs:		X register = X location
 ;								Y register = Y location
 getFromScreen:
- cpy #$09
- BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
+ cpy #$0a
+ BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda graphics_top,y				; get the character back from the screen
  rts
 
 getFromScreenBot:
  tya									; put Y in Accumulator
- clc
+ sec
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
