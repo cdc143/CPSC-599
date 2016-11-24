@@ -75,7 +75,7 @@ gameLoopTop:
  ; sty tempY
  ; cpy #$14
  ; bmi testdrawYloop
- 
+
 ; testdrawXloop:
  ; lda wall_sprite
  ; jsr drawToPlayfield
@@ -365,7 +365,7 @@ drawPRowLoop:
   jsr drawToPlayfield ; draw playfield with char, x=0, y=row
   inx
   inc yOffset
-  cpx #$15
+  cpx #$16
   bne drawPRowLoop
   ldy #$00
   sty yOffset ;reset y offset
@@ -1133,7 +1133,7 @@ level3bottomend
 level3: dc.b $01,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01
 prow0: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 prow1: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66
+prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
 prow_addr: dc.b 0,0,0,0,0,0
 
 level4top:
