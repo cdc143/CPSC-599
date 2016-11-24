@@ -58,6 +58,81 @@ gameLoopTop:
  sta $900f		 		; store in screen and border register
  ;ldx #$03
  ;stx current_room
+ 
+ ;############## test code ###############
+ 
+ lda wall_colour
+ sta drawColour
+ lda wall_sprite
+ ldx #$00
+ ldy #$0
+ jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$1
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$2
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$3
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$4
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$5
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$6
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$7
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$8
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$9
+ ; jsr drawToPlayfield
+ 
+ 
+ ; lda wall_sprite
+ ; ldy #$a
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$b
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$c
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$d
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$e
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$f
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$10
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$11
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$12
+ ; jsr drawToPlayfield
+ ; lda wall_sprite
+ ; ldy #$13
+ ; jsr drawToPlayfield
+ 
+ ldx init_lives
+ stx lives
+ jmp initChars 
+ 
+ ;############## end of  test code ###############
+ 
  ldx #$00
  ldy #$00
  lda #$03
@@ -115,19 +190,11 @@ drawMath:
  lda #$00								; clear Accumulator
  cpy #$00								; see if Y is 0 if it is then go to end of method
  BEQ drawMathEnd
- cpy #$02
- BMI drawMathNext				; if Y is less than 2 then go to next part of method
- lda #$16								; 16 is hex for 22
 drawMathLoop:
- dey
- dey										; decrement y twice
- asl a									; multiply 22 by 2
- cpy #$02
- BPL drawMathLoop				; if Y is more than 2 then loop
-drawMathNext:						; see if there is 1 or 0 Y left to multiply
- cpy #$01								; see if Y is 0 if it is then go to end of method
- BMI drawMathEnd
- adc #$16								; if Y is 1 then add 22
+ dey										; decrement y
+ adc #$15								; iadd 22
+ cpy #$00
+ BNE drawMathLoop				; if Y is greater than 0 then loop
 drawMathEnd:
  stx Scratch							; put X in memory
  adc Scratch							; add
@@ -318,9 +385,9 @@ loadLevel4End:
 
 drawLives:		;draw lives to screen
  lda lives_sprite
- sta graphics_top,x
+ sta status_loc_top,x
  lda life_colour
- sta char_colour_loc_top,x
+ sta status_colour_top,x
  dex
  cpx #$00
  bne drawLives
