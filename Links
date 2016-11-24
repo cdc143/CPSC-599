@@ -8,7 +8,7 @@ To Do
 -Game loop
 -Convert all drawing and collision routines
 -Convert all levels to new level layout routine //CD
--Change seed to random based on timer //CD
+-Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD
 -Enemy movement (some code for this exists in demo02-5)
 -Enemy health by colors

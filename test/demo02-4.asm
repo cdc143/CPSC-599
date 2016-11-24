@@ -378,8 +378,8 @@ break:
   brk
 
 getRandom:
- lda seed
- adc $9003 ;add random number from raster memory (can change this to somewhere else if needed)
+ lda $9114
+ adc $9004
  sta seed
  rts
 
