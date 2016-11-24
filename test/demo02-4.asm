@@ -58,9 +58,9 @@ gameLoopTop:
  sta $900f		 		; store in screen and border register
  ;ldx #$03
  ;stx current_room
- 
+
  ;############## test code ###############
- 
+
  lda wall_colour
  sta drawColour
  lda wall_sprite
@@ -94,8 +94,8 @@ gameLoopTop:
  ; lda wall_sprite
  ; ldy #$9
  ; jsr drawToPlayfield
- 
- 
+
+
  ; lda wall_sprite
  ; ldy #$a
  ; jsr drawToPlayfield
@@ -126,13 +126,12 @@ gameLoopTop:
  ; lda wall_sprite
  ; ldy #$13
  ; jsr drawToPlayfield
- 
- ldx init_lives
- stx lives
- jmp initChars 
- 
+
+ ;ldx init_lives
+ ;stx lives
+ ;jmp initChars
+
  ;############## end of  test code ###############
- 
  ldx #$00
  ldy #$00
  lda #$03
@@ -345,7 +344,7 @@ loadLevel3Loop3:
  jsr drawPRow
  iny
  inc Ycoor
- cpy #$02 ;try to draw only 2 rows for now
+ cpy #$15 ;try to draw only 2 rows for now
  bne loadLevel3Loop3
  ldx #$0
 loadLevel3Loop2:
@@ -407,7 +406,7 @@ drawPRowLoop:
   jsr drawToPlayfield ; draw playfield with char, x=0, y=row
   inx
   inc yOffset
-  cpx #$16
+  cpx #$15
   bne drawPRowLoop
   ldy #$00
   sty yOffset ;reset y offset
@@ -1172,10 +1171,10 @@ level3bottom:
   dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 level3bottomend
 
-level3: dc.b $00,$01,$01
+level3: dc.b $01,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01
 prow0: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-prow1: dc.b $5b,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-prow2: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66
+prow1: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66
 prow_addr: dc.b 0,0,0,0,0,0
 
 level4top:
