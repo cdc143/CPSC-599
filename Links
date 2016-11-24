@@ -2,3 +2,18 @@ Links to stuff
 
 Maps:
 https://drive.google.com/drive/folders/0B7TVTVLBQt-TRWNkR1k3ZDNRcG8?usp=sharing
+To Do
+
+(3x3 8 layouts)
+-Game loop
+-Convert all drawing and collision routines
+-Convert all levels to new level layout routine //CD
+-Change seed to random based on timer //CD
+-"Random" level layouts //CD
+-Enemy movement (some code for this exists in demo02-5)
+-Enemy health by colors
+-Swords and potions and and enemy damage (different color)
+-Moving floors (loop the code)
+-Difficulty settings
+-Custom character set
+-Sound for in game events
