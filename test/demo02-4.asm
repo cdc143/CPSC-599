@@ -61,71 +61,21 @@ gameLoopTop:
 
  ;############## test code ###############
 
- lda wall_colour
- sta drawColour
- lda wall_sprite
- ldx #$00
- ldy #$0
- jsr drawToPlayfield
+ ; lda wall_colour
+ ; sta drawColour
+ ; ldx #$00
+ ; ldy #$00
+ ; sty tempY
+ 
+; testdrawloop:
  ; lda wall_sprite
- ; ldy #$1
  ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$2
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$3
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$4
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$5
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$6
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$7
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$8
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$9
- ; jsr drawToPlayfield
-
-
- ; lda wall_sprite
- ; ldy #$a
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$b
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$c
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$d
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$e
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$f
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$10
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$11
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$12
- ; jsr drawToPlayfield
- ; lda wall_sprite
- ; ldy #$13
- ; jsr drawToPlayfield
+ ; ldy tempX
+ ; iny
+ ; iny
+ ; sty tempY
+ ; cpy #$14
+ ; bmi testdrawloop
 
  ;ldx init_lives
  ;stx lives
@@ -175,6 +125,7 @@ drawToPlayfield:
 
 drawToPlayfieldBot:
  tya									; put Y in Accumulator
+ clc
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
@@ -191,11 +142,13 @@ drawMath:
  BEQ drawMathEnd
 drawMathLoop:
  dey										; decrement y
- adc #$15								; iadd 22
+ clc
+ adc #$16							; iadd 22
  cpy #$00
  BNE drawMathLoop				; if Y is greater than 0 then loop
 drawMathEnd:
  stx Scratch							; put X in memory
+ clc
  adc Scratch							; add
  tay										; put the answer in Y
  rts
@@ -215,9 +168,7 @@ drawToStatus:
  rts
 
 drawToStatusBot:
- tya									; put Y in Accumulator
- sbc #$01							; subtract 1
- tay									; put Y back
+ dey
  jsr drawMath
  lda drawChar					; get the character back
  sta status_loc_bot,y			; draw it to the screen
@@ -239,6 +190,7 @@ getFromScreen:
 
 getFromScreenBot:
  tya									; put Y in Accumulator
+ clc
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
