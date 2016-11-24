@@ -114,7 +114,7 @@ gameLoopTop:
 											; drawColour = the colour you want the character to be drawn in
 drawToPlayfield:
  sta drawChar					; store the Character to draw
- cpy #$09
+ cpy #$0a
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y > 9)
  jsr drawMath
  lda drawChar					; get the character back
