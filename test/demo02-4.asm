@@ -114,25 +114,9 @@ initRoomAddr:
   lda #<level4 ;low byte
   sta room_addr,x
   inx
-  ;lda #>level4
-  ;sta room_addr,x
-  ;inx
-   ;lda #<level5 ;low byte
-   ;sta room_addr,x
-   ;lda #>level5
-   ;inx
-   ;sta room_addr,x
-   ;lda #<level6 ;low byte
-   ;sta room_addr,x
-   ;lda #>level6
-   ;inx
-   ;sta room_addr,x
-   ;lda #<level7 ;low byte
-   ;sta room_addr,x
-   ;lda #>level7
-   ;inx
-   ;sta room_addr,x
-   rts
+  lda #>level4
+  sta room_addr,x
+  rts
 
 initPRowAddr:
   ldx #$0
