@@ -56,39 +56,7 @@ gameLoopTop:
 ;changes the border and background char_colour -> page 175 of vic do manual
  lda #screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
- ;ldx #$03
- ;stx current_room
 
- ;############## test code ###############
-
- ; lda #wall_colour
- ; sta drawColour
- ; ldx #$00
- ; ldy #$00
- ; sty tempY
-
-; testdrawYloop:
- ; lda wall_sprite
- ; jsr drawToPlayfield
- ; ldy tempY
- ; iny
- ; sty tempY
- ; cpy #$14
- ; bmi testdrawYloop
-
-; testdrawXloop:
- ; lda wall_sprite
- ; jsr drawToPlayfield
- ; ldy tempY
- ; inx
- ; cpx #$16
- ; bmi testdrawXloop
-
- ; ldx init_lives
- ; stx lives
- ; jmp initChars
-
- ;############## end of  test code ###############
  ldx #$00
  ldy #$00
  lda #$03
@@ -108,6 +76,88 @@ gameLoopTop:
  ldx init_lives
  stx lives
  jmp initChars
+
+ ;########################## METHODS TO INIT DATA AND UTILITY METHODS HERE #####
+
+getRandom:
+ lda $9114
+ adc $9004
+ sta seed
+ rts
+
+initRoomAddr:
+  ldx #$0
+  lda #<level0 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level0
+  sta room_addr,x
+  inx
+  lda #<level1 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level1
+  sta room_addr,x
+  inx
+  lda #<level2 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level2
+  sta room_addr,x
+  inx
+  lda #<level3 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level3
+  sta room_addr,x
+  inx
+  lda #<level4 ;low byte
+  sta room_addr,x
+  inx
+  ;lda #>level4
+  ;sta room_addr,x
+  ;inx
+   ;lda #<level5 ;low byte
+   ;sta room_addr,x
+   ;lda #>level5
+   ;inx
+   ;sta room_addr,x
+   ;lda #<level6 ;low byte
+   ;sta room_addr,x
+   ;lda #>level6
+   ;inx
+   ;sta room_addr,x
+   ;lda #<level7 ;low byte
+   ;sta room_addr,x
+   ;lda #>level7
+   ;inx
+   ;sta room_addr,x
+   rts
+
+initPRowAddr:
+  ldx #$0
+  lda #<prow0
+  sta prow_addr,x
+  inx
+  lda #>prow0
+  sta prow_addr,x
+  inx
+  lda #<prow1
+  sta prow_addr,x
+  inx
+  lda #>prow1
+  sta prow_addr,x
+  inx
+  lda #<prow2
+  sta prow_addr,x
+  inx
+  lda #>prow2
+  sta prow_addr,x
+  rts
+
+ ;######################### END INIT AND UTILITY METHODS #######################
+
+
 
 ;###########################################################################
 ;###########################################################################
@@ -206,6 +256,7 @@ getFromScreenBot:
  lda graphics_bot,y				; get the character back from the screen
  rts
 
+;########################## LEVEL LOADING CODE ################################
 
 loadLevel:
  ldx current_room
@@ -257,16 +308,6 @@ roomZeroorThree:
   jsr drawToPlayfield
   rts
 
-drawLives:		;draw lives to screen
- lda #lives_sprite
- sta status_loc_top,x
- lda #life_colour
- sta status_colour_top,x
- dex
- cpx #$00
- bne drawLives
- rts
-
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   ldx #$00
   lda #wall_colour
@@ -286,10 +327,16 @@ drawPRowLoop:
   ldy tempY ;restore callers y reg
   rts
 
-getRandom:
- lda $9114
- adc $9004
- sta seed
+;############################# END OF LEVEL LOADING CODE ######################
+
+drawLives:		;draw lives to screen
+ lda #lives_sprite
+ sta status_loc_top,x
+ lda #life_colour
+ sta status_colour_top,x
+ dex
+ cpx #$00
+ bne drawLives
  rts
 
 gameOver: ;
@@ -929,75 +976,7 @@ error: ;shouldn't happen
 ; loading a level overwrites the A and X registers at the moment
 ; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
 
-initRoomAddr:
- ldx #$0
- lda #<level0 ;low byte
- sta room_addr,x
- inx
- lda #>level0
- sta room_addr,x
- inx
- lda #<level1 ;low byte
- sta room_addr,x
- inx
- lda #>level1
- sta room_addr,x
- inx
- lda #<level2 ;low byte
- sta room_addr,x
- inx
- lda #>level2
- sta room_addr,x
- inx
- lda #<level3 ;low byte
- sta room_addr,x
- inx
- lda #>level3
- sta room_addr,x
- inx
- lda #<level4 ;low byte
- sta room_addr,x
- inx
- ;lda #>level4
- ;inx
- ;sta room_addr,x
- ;lda #<level5 ;low byte
- ;sta room_addr,x
- ;lda #>level5
- ;inx
- ;sta room_addr,x
- ;lda #<level6 ;low byte
- ;sta room_addr,x
- ;lda #>level6
- ;inx
- ;sta room_addr,x
- ;lda #<level7 ;low byte
- ;sta room_addr,x
- ;lda #>level7
- ;inx
- ;sta room_addr,x
- rts
 
-initPRowAddr:
- ldx #$0
- lda #<prow0
- sta prow_addr,x
- inx
- lda #>prow0
- sta prow_addr,x
- inx
- lda #<prow1
- sta prow_addr,x
- inx
- lda #>prow1
- sta prow_addr,x
- inx
- lda #<prow2
- sta prow_addr,x
- inx
- lda #>prow2
- sta prow_addr,x
- rts
 
  ;changed all the $a6 to $66 because the character changes depending on whether
  ;we use jsr ffd2 or sta $96xx/97xx
