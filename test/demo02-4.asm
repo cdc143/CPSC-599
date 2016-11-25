@@ -54,14 +54,14 @@ gameLoopTop:
  jsr $e55f       		; clear screen
 
 ;changes the border and background char_colour -> page 175 of vic do manual
- lda screen_colour		 ; 0f ->this makes a green border and black background
+ lda #screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
  ;ldx #$03
  ;stx current_room
 
  ;############## test code ###############
 
- ; lda wall_colour
+ ; lda #wall_colour
  ; sta drawColour
  ; ldx #$00
  ; ldy #$00
@@ -232,7 +232,7 @@ loadLevelLoop:
  jsr drawPRow
  iny
  inc Ycoor
- cpy #$15 ;try to draw only 2 rows for now
+ cpy #row_end ;try to draw only 2 rows for now
  bne loadLevelLoop
 
  ldx #$0
@@ -240,7 +240,7 @@ loadLevelLoop:
  rts
 
 putDoors:
-  lda wall_colour
+  lda #wall_colour
   sta drawColour
   lda current_room
   cmp #$00
@@ -249,18 +249,18 @@ putDoors:
 roomZeroorThree:
   ldy #$0a ;Should be 9, glitch in drawing code
   ldx #$15
-  lda door_sprite
+  lda #door_sprite
   jsr drawToPlayfield
   ldx #$0a
   ldy #$00
-  lda door_sprite
+  lda #door_sprite
   jsr drawToPlayfield
   rts
 
 drawLives:		;draw lives to screen
- lda lives_sprite
+ lda #lives_sprite
  sta status_loc_top,x
- lda life_colour
+ lda #life_colour
  sta status_colour_top,x
  dex
  cpx #$00
@@ -269,29 +269,22 @@ drawLives:		;draw lives to screen
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   ldx #$00
-  lda wall_colour
+  lda #wall_colour
   sta drawColour
   sty tempY
 drawPRowLoop:
   ldy yOffset ;offset into row data
   lda ($fd),y ;char to draw
   ldy Ycoor ; row to draw
-  ;cpy #01
-  ;beq break
   jsr drawToPlayfield ; draw playfield with char, x=0, y=row
   inx
   inc yOffset
-  cpx #$16
+  cpx #row_end+1
   bne drawPRowLoop
   ldy #$00
   sty yOffset ;reset y offset
   ldy tempY ;restore callers y reg
   rts
-break:
-  sta $1000 ;Correct values are in regs for drawing second row
-  sty $1001
-  stx $1002
-  brk
 
 getRandom:
  lda $9114
@@ -306,9 +299,9 @@ gameOver: ;
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp f5 ;quit
+ cmp #f5 ;quit
  beq quitBounce
- cmp f1 ;f1 to restart
+ cmp #f1 ;f1 to restart
  bne gameOverEnd
  jmp gameLoopTop
 
@@ -316,12 +309,12 @@ initEnemyLocation:
   jsr getRandom
   tax
   lda graphics_playfield_start,x
-  cmp space_sprite
+  cmp #space_sprite
   bne initEnemyLocation
-  lda enemy_sprite
+  lda #enemy_sprite
   sta graphics_playfield_start,x ;potential problem/not problem: enemies
 							;can only spawn 255 spaces past graphics_playfield_start
-  lda char_colour
+  lda #char_colour
   adc #$10
   sta color_playfield_start,x
   dey
@@ -354,7 +347,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  tay
  jsr initEnemyLocation
  jsr getRowColForm
- lda p1_sprite		; 'B'
+ lda #p1_sprite		; 'B'
  jsr drawToScreen
  pla			; pull acc from stack
  sta $9005		; store in char memory
@@ -367,15 +360,15 @@ top:			; top of loop
  pha				; push to stack
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
- cmp f1 			;f1 to restart
+ cmp #f1 			;f1 to restart
  beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
- cmp a		 	;a pressed
+ cmp #a		 	;a pressed
  beq playleft	 	; move left
- cmp d		 	;d pressed
+ cmp #d		 	;d pressed
  beq playright	 	; move right
- cmp w	 		;w pressed
+ cmp #w	 		;w pressed
  beq playup
- cmp s			 ;s pressed
+ cmp #s			 ;s pressed
  beq playdown
 ; cmp #33
 ; beq attack
@@ -451,7 +444,7 @@ rightCheck:
 rightBot:
  jsr col_bot_set_1
 updateRight:
- cpx row_end		 ; check if x =21 (end of right)
+ cpx #row_end		 ; check if x =21 (end of right)
  beq updateNewLocBounce	 ; at end of screen right
  jsr updatePrevLoc
  inc row 		 ; rows +1
@@ -543,7 +536,7 @@ checkRowsToBot:		;check moving from 0b to 0c
  bne prevBot
 
 prevLocIsTop:
- lda space_sprite	 	;  space
+ lda #space_sprite	 	;  space
  jsr drawToScreen
  rts
 
@@ -551,7 +544,7 @@ prevLocIsTop:
  ;if bottom register =1 and 1004 (key pressed) is down, then
  ;draw top
 prevBot:
- lda space_sprite
+ lda #space_sprite
  jsr drawToScreenBot	;draw space over previous move
  rts
 
@@ -576,7 +569,7 @@ colsnext:
  rts
 
 loseLife:			;player dies
- lda space_sprite
+ lda #space_sprite
  ldx lives		;this
  jsr drawToScreen
  dec lives
@@ -598,10 +591,10 @@ collision:		 ; detect collision between B and C
 collision_bot:
  ldy graphics_bot,x
 collision_compares:
- cpy wall_sprite
+ cpy #wall_sprite
  beq drawcoll
  jsr checkPortalOrLevel
- cpy enemy_sprite		; check if character is enemy
+ cpy #enemy_sprite		; check if character is enemy
  bne drawCharacter	; not C
  ldy #$05			;set up all this for collision
  sty coll_loop_count			;reg for coll animation loops
@@ -614,9 +607,9 @@ drawcoll:
  rts
 
 checkPortalOrLevel:
- cpy portal_sprite
+ cpy #portal_sprite
  beq portalAnimation
- cpy door_sprite
+ cpy #door_sprite
  bne notNewLevel
  jsr loadNewLevel
  jmp initCharsNextLevel	;loads character, lives, and enemies into next level
@@ -625,7 +618,7 @@ notNewLevel:
 
 portalAnimation:
  jsr $e55f
- lda screen_colour
+ lda #screen_colour
  sta temp_colour
  ldx #$08				;number of iterations
 portalAnimTop:
@@ -645,7 +638,7 @@ drawCharacter:
  cpy #$01
  beq drawBottom
  jsr getRowColForm
- lda p1_sprite		; 'B'
+ lda #p1_sprite		; 'B'
  bcs drawBottom	;check for row #$12/divider row between top and bottom
  bcc drawTop
 
@@ -656,7 +649,7 @@ drawTimer:	;timer to draw objects
 
 drawBottom:
  jsr getRowColForm
- lda p1_sprite ;#$01
+ lda #p1_sprite ;#$01
  jsr drawToScreenBot
  jsr drawTimer
  rts
@@ -668,13 +661,13 @@ drawTop:
 
 drawToScreen:
  sta graphics_top,x	; store space
- lda char_colour		; char_colour to black
+ lda #char_colour		; char_colour to black
  sta char_colour_loc_top,x	; store char_colour in new location too
  rts
 
 drawToScreenBot:
  sta graphics_bot,x	; store space
- lda char_colour		; char_colour to black
+ lda #char_colour		; char_colour to black
  sta char_colour_loc_bot,x	; store char_colour in new location too
  rts
 
@@ -682,7 +675,7 @@ collAnimationLoop:
  jsr collMovementCheck	;check where collision moves piece
  ;jsr checkColBot		;check top or bottom
  jsr collisionAnimation	;collision animation
- lda space_sprite
+ lda #space_sprite
  ldy col_bot
  cpy #$01
  beq drawSpaceBot
@@ -740,7 +733,7 @@ checkDownColBotLeft:	;up and left side of screen
 
 collisionAnimation:
  jsr getRowColForm
- lda p1_sprite
+ lda #p1_sprite
  ldy col_bot
  cpy #$01
  beq storeNewCollBot
@@ -749,7 +742,7 @@ collisionAnimation:
  sta char_colour_loc_top,x	; store char_colour
  jmp collAnimNext
 storeNewCollBot:
- lda p1_sprite	;#$02
+ lda #p1_sprite	;#$02
  sta graphics_bot,x	; store in new index
  lda coll_char_colour		    ; char_colour
  sta char_colour_loc_bot,x	; store char_colour
@@ -777,7 +770,7 @@ collLeft:		;a pressed
  cmp #$01
  beq collRet
  ldx row
- cpx row_end		;check if far left
+ cpx #row_end		;check if far left
  beq collRet
  inc row			;else increment row
 checkCol_Bot_hori:
@@ -864,9 +857,9 @@ collTop:
 collRightTop:
  lda graphics_top,x
 compareCollRight:
- cmp wall_sprite
+ cmp #wall_sprite
  beq collTopSet1
- cmp enemy_sprite
+ cmp #enemy_sprite
  beq collTopSet1
  tay
  jsr checkPortalOrLevel	;check if you hit portal or doorway during collision animation
@@ -900,7 +893,7 @@ loadNewLevel:
   rts
 checkright:
   lda row
-  cmp row_end
+  cmp #row_end
   bne checkbottom
   inc current_room
   lda row_newLevel_begin
@@ -925,7 +918,7 @@ checkLeft:
   cmp row_begin
   bne error
   dec current_room
-  lda row_end
+  lda #row_end
   sta row
   dec row
   jsr loadLevel
@@ -1117,30 +1110,14 @@ current_key:			dc.b 0
 inventory:				dc.b 0
 pi_weapon:			dc.b #94
 temp_colour:			dc.b 0
-char_colour:			dc.b #$55
-wall_colour:			dc.b #$44
-life_colour:			dc.b 2
-screen_colour:		dc.b #$0f
 timer_loop:			dc.b 0
 coll_char_colour:	dc.b 0
-w:						dc.b #9
-a:							dc.b #17
-s:							dc.b #41
-d:							dc.b #18
-f5:							dc.b #55
-f1:						dc.b #39
-p1_sprite:				dc.b #81		;81 = circle
-lives_sprite:			dc.b #83		;heart
-enemy_sprite:		dc.b #87		;circle
-wall_sprite:			dc.b $66		;weird checkered square thingy
-portal_sprite:			dc.b $7F 		;#209
-space_sprite:			dc.b #32    ;$20
 row_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$140e
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
-row_end:				dc.b #$15
+
 col_begin:				dc.b #$00
 col_mid_down:		dc.b #$0b
 col_mid_up:			dc.b #$0d
@@ -1149,7 +1126,7 @@ col_end:				dc.b #$16
 seed:					dc.b #$74 ;constant seed
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0
-door_sprite       dc.b $5b
+
 isCollision		dc.b #$00
 anim_time:		dc.b #$40	;time for animation
 pos_to_compare dc.b 0
