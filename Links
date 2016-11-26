@@ -6,11 +6,11 @@ To Do
 
 (3x3 8 layouts)
 -Game loop
--Convert all drawing and collision routines
+-Convert all drawing and collision routines     // LM partial work started in new branch, needs a game loop to work properly
 -Convert all levels to new level layout routine //CD (Orig 4 levels complete)
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
--Enemy movement (some code for this exists in demo02-5)
+-Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors
 -Swords and potions and and enemy damage (different color)
 -Moving floors (loop the code)
