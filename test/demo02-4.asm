@@ -168,6 +168,7 @@ initPRowAddr:
 											; drawColour = the colour you want the character to be drawn in
 drawToPlayfield:
  sta drawChar					; store the Character to draw
+ sty Ycoor							; store the Y coordinate
  cpy #$0a
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
@@ -175,7 +176,7 @@ drawToPlayfield:
  sta graphics_top,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_top,y	; put the colour on the screen
- rts
+ jmp drawReturn
 
 drawToPlayfieldBot:
  tya									; put Y in Accumulator
@@ -187,7 +188,7 @@ drawToPlayfieldBot:
  sta graphics_bot,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_bot,y	; put the colour on the screen
- rts
+ jmp drawReturn
 
  ; multiplies Y by 22 and adds X to it returns the answer in the Y register
 drawMath:
@@ -214,6 +215,7 @@ drawMathEnd:
  ;						2 = second bottom status bar (lowwer)
 drawToStatus:
  sta drawChar					; store the Character to draw
+ sty Ycoor							; store the Y coordinate
  cpy #$00
  BMI drawToStatusBot
  sta status_loc_top,x			; draw it to the screen
@@ -228,6 +230,10 @@ drawToStatusBot:
  sta status_loc_bot,y			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_bot,y		; put the colour on the screen
+ jmp drawReturn
+ 
+drawReturn:						; used to set the Y register back to what it was before and rts
+ ldy Ycoor
  rts
 
 ;##########                                                GET FROM SCREEN                                                ##########
@@ -236,11 +242,12 @@ drawToStatusBot:
 ;				inputs:		X register = X location
 ;								Y register = Y location
 getFromScreen:
+ sty Ycoor							; store the Y coordinate
  cpy #$0a
  BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda graphics_top,y				; get the character back from the screen
- rts
+ jmp drawReturn
 
 getFromScreenBot:
  tya									; put Y in Accumulator
@@ -249,7 +256,7 @@ getFromScreenBot:
  tay									; put Y back
  jsr drawMath
  lda graphics_bot,y				; get the character back from the screen
- rts
+ jmp drawReturn
 
 ;########################## LEVEL LOADING CODE ################################
 
@@ -372,10 +379,10 @@ gameOverEndBounce:
 
 initChars:
  lda #$01
- sta row		; row
+ sta playerX		; X = 1
  lda #$0b
- sta col		; col
-initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ sta playerY		; Y
+initCharsNextLevel:	;this is a branch so it skips over assigning X and Y to
 ;player -> this assumes that it is done before this subroutine is done.
  ldx lives	;load index of where to draw lives to screen
 ;these lines are here so that they refresh the screen every time
@@ -437,7 +444,7 @@ next:
  pla			; pull acc from stack
  sta $9005 		; store in char mem
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp f5		 ; check if Q is pressed -> quit
+ cmp f5		 ; check if f5 is pressed -> quit
  beq quit		 ;continue input
  jmp top
 quit:
@@ -452,31 +459,34 @@ attack:
  sta $900b			 ; store sound
  rts
 
-loadRowColLR:
- jsr col_bot_set_0
- ldx row			;load rows
- ldy col			;load cols
- rts
+ 
+ ;##### not needed? remove? will leave here until sure ######
+; loadRowColLR:
+ ; jsr col_bot_set_0
+ ; ldx playerX			;load rows
+ ; ldy playerY			;load cols
+ ; rts
+ 
 left:
- jsr loadRowColLR
- cpy col_mid_down			;check if cols > 11 (bottom half of screen)
- bmi updateLeft		;not bottom of screen
- beq leftCheck		; =11, so check if far right side
- bpl leftBot		; for sure bottom
-leftCheck:
- cpx row_mid_left			 ; check if row > 15, (bottom of screen)
- bmi updateLeft		;not bottom of screen
-leftBot:
- jsr col_bot_set_1
-updateLeft:
- cpx row_begin				; check if end of screen on left
+ ; jsr loadRowColLR
+ ; cpy col_mid_down			;check if cols > 11 (bottom half of screen)
+ ; bmi updateLeft		;not bottom of screen
+ ; beq leftCheck		; =11, so check if far right side
+ ; bpl leftBot		; for sure bottom
+; leftCheck:
+ ; cpx row_mid_left			 ; check if row > 15, (bottom of screen)
+ ; bmi updateLeft		;not bottom of screen
+; leftBot:
+ ; jsr col_bot_set_1
+; updateLeft:
+ ; cpx row_begin				; check if end of screen on left
  beq updateNewLocBounce	; don't move character because it is at end of left screen
  jsr updatePrevLoc
- dec row				; rows -1
+ dec playerX				; X -1
  jmp updateNewLocBounce
 
 right:			;similar as above left subroutine
- jsr loadRowColLR
+ ; jsr loadRowColLR
  cpy col_mid_down
  bmi updateRight
  beq rightCheck
@@ -490,7 +500,7 @@ updateRight:
  cpx #row_end		 ; check if x =21 (end of right)
  beq updateNewLocBounce	 ; at end of screen right
  jsr updatePrevLoc
- inc row 		 ; rows +1
+ inc playerX 		 ; X +1
  jmp updateNewLocBounce
 
 updateNewLocBounce:	;fix branch out of range
@@ -498,7 +508,7 @@ updateNewLocBounce:	;fix branch out of range
 
 up:
  jsr col_bot_set_0
- ldx col			;top cols
+ ldx playerY			;top cols
  cpx col_begin		 ; check if x < 21 (on top row)
  beq updateNewLoc	 ; at end of screen top
  cpx col_mid_up			;else, check if in top half of screen
@@ -506,12 +516,12 @@ up:
  jsr col_bot_set_1
 updateUp:
  jsr updatePrevLoc
- dec col 			 ; cols -1
+ dec playerY 			 ; Y -1
  jmp updateNewLoc
 
 down:
  jsr col_bot_set_0
- ldx col
+ ldx playerY
  cpx col_mid_down	 ; check if bottom (greater than last spot on second to bottom row)
  bmi updateDown
  jsr col_bot_set_1
@@ -519,7 +529,7 @@ down:
  beq updateNewLoc
 updateDown:
  jsr updatePrevLoc
- inc col 		 ; cols + 1
+ inc playerY 		 ; Y + 1
  jmp updateNewLoc
 
 updateNewLoc:
@@ -535,45 +545,45 @@ updatePrevLoc:		;updates where player previously was
  beq checkColToBot
 
 checkColToTop:	;going from bottom to top
- lda row
+ lda playerX
  cmp #$0d
  beq checkLeftToTop
  bpl checkRowsToTop
- lda col
+ lda playerY
  cmp #$0c		;going from bottom to top
  beq prevBot	;prev location was bottom
  bne prevLocIsTop
 
 checkColToBot:	; going from top to bottom
- lda row
+ lda playerX
  cmp #$0d
  beq checkRightToBot	;check 255th byte
  bpl checkRowsToBot
- lda col
+ lda playerY
  cmp col_mid_down		;check if col is 11
  beq prevLocIsTop	;going from top to bottom
  bne prevBot
 
 checkLeftToTop:	;check row 0b going from bottom to top from left
- lda col
+ lda playerY
  cmp col_mid_down			;check if in row 0b
  beq prevLocIsTop	;yes,
  bne checkRowsToTop	;no, so check for another row
 
 checkRightToBot:	;check moving right to bottom around 255th byte
- lda col
+ lda playerY
  cmp col_mid_down
  beq prevLocIsTop	;moving from top to bot
  bne prevBot		;nope, on bottom
 
 checkRowsToTop:		;check moving from 0c to 0b
- lda col
+ lda playerY
  cmp col_mid_down
  bpl prevBot		; on bottom if > 0b
  bne prevLocIsTop
 
 checkRowsToBot:		;check moving from 0b to 0c
- lda col
+ lda playerY
  cmp #$0a
  beq prevLocIsTop
  bne prevBot
@@ -593,7 +603,7 @@ prevBot:
 
 getRowColForm:		;get coord in row +column
  ldy #$00
- ldx col
+ ldx playerY
 addCols:		;converts to row spacing
  cpx #$00
  beq colsnext
@@ -606,7 +616,7 @@ addCols:		;converts to row spacing
  bne addCols
  tya
  clc
- adc row
+ adc playerX
  tax
 colsnext:
  rts
@@ -755,7 +765,7 @@ checkHorizontalColBot:	;animation moves right or left
  ldx #$0e			;check if in middle of row
  jmp check0or1
 checkUpColBot:			;animation moves down. This works
- ldx row
+ ldx playerX
  cpx #$0e				;check if in middle of row
  bpl checkUpColBotLeft
  cmp col_mid_down		;animation moves down right side of screen
@@ -765,7 +775,7 @@ checkUpColBotLeft:		;animation moves down left side of screen
  ldx #$0a			;check if in middle of col
  jmp check0or1
 checkDownColBot:		;animation moves up
- ldx row
+ ldx playerX
  cpx #$0e			;check if in middle of row
  bpl checkDownColBotLeft
  ldx col_mid_up			;up and right side of screen
@@ -812,18 +822,18 @@ collLeft:		;a pressed
  jsr collTop
  cmp #$01
  beq collRet
- ldx row
+ ldx playerX
  cpx #row_end		;check if far left
  beq collRet
- inc row			;else increment row
+ inc playerX			;else increment X
 checkCol_Bot_hori:
- lda col
+ lda playerY
  cmp col_mid_down	;check for left/right movement
  bmi set_0
  beq checkColH	;awkward middle transition point
  bpl set_1
 checkColH:
- lda row
+ lda playerX
  jsr checkHorizontalColBot
  ;perhaps check col_bot here
  rts
@@ -834,10 +844,10 @@ collRight:	;d pressed
  jsr collTop
  cmp #$01
  beq collRet
- ldx row
+ ldx playerX
  cpx row_begin
  beq collRet
- dec row
+ dec playerX
  bne checkCol_Bot_hori	;branch over
 
 set_0:
@@ -861,18 +871,18 @@ collUp:	;w pressed
  jsr collTop
  cmp #$01
  beq collRet
- ldx col
+ ldx playerY
  cpx col_end
  beq collRet
- inc col
+ inc playerY
 checkCol_Bot_vert:
- lda col
+ lda playerY
  cmp col_mid_down	;check for left/right movement
  bmi set_0
  beq checkColV	;awkward middle transition point
  bpl set_1
 checkColV:
- lda col
+ lda playerY
  jsr checkDownColBot
  rts
 
@@ -885,10 +895,10 @@ collDown:	;s pressed
  jsr collTop
  cmp #$01
  beq collRet
- ldx col
+ ldx playerY
  cpx col_begin
  beq collRet
- dec col
+ dec playerY
  bne checkCol_Bot_vert	;this seems to work even though it probably shouldn't
 
 collTop:
@@ -923,46 +933,46 @@ timer:
  rts			 ; N set, return
 
 loadNewLevel:
-  lda col
+  lda playerY
   cmp row_newLevel_begin		;checking top
   bne checkright
   inc current_room
   inc current_room
   lda col_newLevel_end
-  sta col
-  dec col
+  sta playerY
+  dec playerY
   jsr loadLevel
   rts
 checkright:
-  lda row
+  lda playerX
   cmp #row_end
   bne checkbottom
   inc current_room
   lda row_newLevel_begin
-  sta row
-  inc row
+  sta playerX
+  inc playerX
   jsr loadLevel
   rts
 checkbottom:
-  lda col
+  lda playerY
   cmp col_newLevel_end
   bne checkLeft
   dec current_room
   dec current_room
   lda col_begin
-  sta col
-  inc col
-  inc col
+  sta playerY
+  inc playerY
+  inc playerY
   jsr loadLevel
   rts
 checkLeft:
-  lda row
+  lda playerX
   cmp row_begin
   bne error
   dec current_room
   lda #row_end
-  sta row
-  dec row
+  sta playerX
+  dec playerX
   jsr loadLevel
 
 error: ;shouldn't happen
@@ -983,8 +993,11 @@ prow3: dc.b $66,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,
 prow4: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0
 
-row:						dc.b 0
-col:						dc.b 0
+
+playerX:				dc.b 0
+playerY:				dc.b 0
+; row:						dc.b 0
+; col:						dc.b 0
 col_bot:				dc.b 0
 coll_loop_count:		dc.b 0
 portal_counter:		dc.b 0
