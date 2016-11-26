@@ -80,7 +80,7 @@ genRoomLoop:
  and #$03
  sta rooms,y
  iny
- cpy #$04
+ cpy #$09
  bne genRoomLoop
  rts
 
@@ -281,7 +281,8 @@ loadLevelLoop:
  cpy #$14 ;try to draw only 2 rows for now
  bne loadLevelLoop
 
- ldx #$0
+ ldx #$01
+ stx Ycoor
  jsr putDoors
  rts
 
@@ -289,9 +290,9 @@ putDoors:
   lda #wall_colour
   sta drawColour
   lda current_room
-  cmp #$00
-  beq roomZeroorThree
-  brk
+  ;cmp #$00
+  ;beq roomZeroorThree
+  ;cmp #$00
 roomZeroorThree:
   ldy #$0a ;Should be 9, glitch in drawing code
   ldx #$15
@@ -922,7 +923,6 @@ timer:
  rts			 ; N set, return
 
 loadNewLevel:
-  jsr $e55f	;clear screen
   lda col
   cmp row_newLevel_begin		;checking top
   bne checkright
@@ -1009,7 +1009,7 @@ col_mid_up:			dc.b #$0d
 col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
-rooms:          dc.b 0,0,0,0
+rooms:          dc.b 0,0,0,0,0,0,0,0,0
 
 isCollision		dc.b #$00
 anim_time:		dc.b #$40	;time for animation
