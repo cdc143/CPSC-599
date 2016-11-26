@@ -968,14 +968,6 @@ checkLeft:
 error: ;shouldn't happen
   rts
 
-; loading a level overwrites the A and X registers at the moment
-; might be a good idea to write a couple lines to save the A and X regs somewhere and then swap them back before rts
-
-
-
- ;changed all the $a6 to $66 because the character changes depending on whether
- ;we use jsr ffd2 or sta $96xx/97xx
-
 level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level1: dc.b $01,$02,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$01
 level2: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$02,$04,$04,$04,$04,$04,$04,$04,$01

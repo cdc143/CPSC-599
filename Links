@@ -7,9 +7,9 @@ To Do
 (3x3 8 layouts)
 -Game loop
 -Convert all drawing and collision routines
--Convert all levels to new level layout routine //CD
+-Convert all levels to new level layout routine //CD (Orig 4 levels complete)
 -Change seed to random based on timer //CD (Done)
--"Random" level layouts //CD
+-"Random" level layouts //CD (Done)
 -Enemy movement (some code for this exists in demo02-5)
 -Enemy health by colors
 -Swords and potions and and enemy damage (different color)
