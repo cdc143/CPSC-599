@@ -284,6 +284,7 @@ loadLevelLoop:
  ldx #$01
  stx Ycoor
  jsr putDoors
+ jsr putDrops
  rts
 
 putDoors:
@@ -389,11 +390,62 @@ putLeftDoor:
   jsr drawToPlayfield
   rts
 putPortal:
+  pha
   ldy #$0a
   ldx #$0b
-  lda portal_sprite
+  lda #$7f
   jsr drawToPlayfield
+  pla
   rts
+putDrops: ;Randomly decide if portal, potion or sword or none
+dropLoop:
+  jsr getRandom
+  and #$0f
+  tay
+  jsr getRandom
+  and #$0f
+  tax
+  ;jsr getFromScreen
+  ;cmp #$20
+  ;bne dropLoop
+  jsr getRandom
+  and #$0f
+  cmp #$00
+  bne drop1
+  jsr putPortal
+  rts
+drop1:
+  cmp #$01
+  bne drop2
+  jsr putSword
+  rts
+drop2:
+  cmp #$02
+  bne dropEnd
+  jsr putPotion
+dropEnd:
+  rts
+
+putSword: ;Assumes x coordinate and y coordinate to draw will be passed in
+  pha
+  lda #$58
+  ldy #$03
+  ldx #$02
+  jsr drawToPlayfield
+  pla
+  rts
+
+putPotion: ;Assumes x coordinate and y coordinate to draw will be passed in
+  pha
+  lda #$5a
+  ldy #$03
+  ldx #$01
+  jsr drawToPlayfield
+  pla
+  rts
+
+
+
 
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg

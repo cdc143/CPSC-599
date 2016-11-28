@@ -4,7 +4,7 @@ Maps:
 https://drive.google.com/drive/folders/0B7TVTVLBQt-TRWNkR1k3ZDNRcG8?usp=sharing
 To Do
 
-(3x3 8 layouts)
+(3x3 8 layouts) //CD 3x3 layout complete, need to do more levels
 -Game loop
 -Convert all drawing and collision routines     // LM partial work started in new branch, needs a game loop to work properly
 -Convert all levels to new level layout routine //CD (Orig 4 levels complete)
@@ -12,7 +12,7 @@ To Do
 -"Random" level layouts //CD (Done)
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors
--Swords and potions and and enemy damage (different color)
+-Swords and potions and and enemy damage (different color). //CD start on swords, portal and potion positioning
 -Moving floors (loop the code)
 -Difficulty settings
 -Custom character set
