@@ -1146,7 +1146,7 @@ timer_loop:			dc.b 0
 coll_char_colour:	dc.b 0
 row_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
-col_newLevel_end:   dc.b #$140e
+col_newLevel_end:   dc.b #$14
 row_mid_left:		dc.b #$0f
 row_mid_right:		dc.b #$0d
 
