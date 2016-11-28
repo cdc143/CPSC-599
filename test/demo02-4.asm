@@ -290,19 +290,111 @@ putDoors:
   lda #wall_colour
   sta drawColour
   lda current_room
-  ;cmp #$00
-  ;beq roomZeroorThree
-  ;cmp #$00
-roomZeroorThree:
+  sta $1000
+  cmp #$00
+  bne room1
+  jsr putRightDoor
+  jsr putTopDoor
+  rts
+room1:
+  lda current_room
+  cmp #$01
+  bne room2
+  jsr putTopDoor
+  jsr putRightDoor
+  jsr putLeftDoor
+  rts
+room2:
+  lda current_room
+  cmp #$02
+  bne room3
+  jsr putTopDoor
+  jsr putLeftDoor
+  rts
+room3:
+  lda current_room
+  cmp #$03
+  bne room4
+  jsr putBottomDoor
+  jsr putRightDoor
+  jsr putTopDoor
+  rts
+room4:
+  lda current_room
+  cmp #$04
+  bne room5
+  jsr putLeftDoor
+  jsr putTopDoor
+  jsr putRightDoor
+  jsr putBottomDoor
+  rts
+room5:
+  lda current_room
+  cmp #$05
+  bne room6
+  jsr putLeftDoor
+  jsr putTopDoor
+  jsr putBottomDoor
+  rts
+room6:
+  lda current_room
+  cmp #$06
+  bne room7
+  jsr putBottomDoor
+  jsr putRightDoor
+  rts
+room7:
+  lda current_room
+  cmp #$07
+  bne room8
+  jsr putLeftDoor
+  jsr putBottomDoor
+  jsr putRightDoor
+  rts
+room8:
+  lda current_room
+  cmp #$08
+  bne roomError
+  jsr putLeftDoor
+  jsr putBottomDoor
+  jsr putPortal
+  rts
+roomError:
+  brk ;Shouldn't happe
+  rts
+
+
+putRightDoor:
   ldy #$0a ;Should be 9, glitch in drawing code
   ldx #$15
   lda #door_sprite
   jsr drawToPlayfield
+  rts
+putTopDoor:
   ldx #$0a
-  ldy #$00
+  ldy #$01
   lda #door_sprite
   jsr drawToPlayfield
   rts
+putBottomDoor:
+  ldx #$0a
+  ldy #$14
+  lda #door_sprite
+  jsr drawToPlayfield
+  rts
+putLeftDoor:
+  ldy #$0a ;Should be 9, glitch in drawing code
+  ldx #$00
+  lda #door_sprite
+  jsr drawToPlayfield
+  rts
+putPortal:
+  ldy #$0a
+  ldx #$0b
+  lda portal_sprite
+  jsr drawToPlayfield
+  rts
+
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   ldx #$00
@@ -928,6 +1020,7 @@ loadNewLevel:
   bne checkright
   inc current_room
   inc current_room
+  inc current_room
   lda col_newLevel_end
   sta col
   dec col
@@ -949,6 +1042,7 @@ checkbottom:
   bne checkLeft
   dec current_room
   dec current_room
+  dec current_room
   lda col_begin
   sta col
   inc col
@@ -964,8 +1058,10 @@ checkLeft:
   sta row
   dec row
   jsr loadLevel
+  rts
 
 error: ;shouldn't happen
+  brk
   rts
 
 level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
