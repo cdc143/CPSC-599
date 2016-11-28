@@ -6,7 +6,7 @@ To Do
 
 (3x3 8 layouts) //CD 3x3 layout complete, need to do more levels
 -Game loop
--Convert all drawing and collision routines     // LM partial work started in new branch, needs a game loop to work properly
+-Convert all drawing and collision routines     // LM partial work started in my local files, needs a game loop to work properly
 -Convert all levels to new level layout routine //CD (Orig 4 levels complete)
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
