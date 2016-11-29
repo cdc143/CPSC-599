@@ -16,4 +16,4 @@ To Do
 -Moving floors (loop the code)
 -Difficulty settings
 -Custom character set
--Sound for in game events
+-Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete
