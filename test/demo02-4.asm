@@ -541,7 +541,6 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  pla			; pull acc from stack
  sta $9005		; store in char memory
 
- ; screen registers 1e00-1fff -> 7680-8191 -> 511
 top:			; top of loop
  lda #$00
  sta $900b			 ; store sound
@@ -549,8 +548,32 @@ top:			; top of loop
  pha				; push to stack
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
+ jsr move
+ ldx row
+ ldy col
+ lda #p1_sprite
+ jsr drawToPlayfield
+ jsr drawTimer
+ ;jsr checkCollision
+
+next:
+  ;Wait for user to press enter, and restore the character set
+ pla			; pull acc from stack
+ sta $9005 		; store in char mem
+ lda current_key		 ; current key held down -> page 179 of vic20 manual
+ cmp f5		 ; check if Q is pressed -> quit
+ beq quit		 ;continue input
+ bne top
+quit:
+ jsr $e55f       ; clear screen before exiting
+ brk			 ; quit
+
+; screen registers 1e00-1fff -> 7680-8191 -> 511
+move:
  cmp #f1 			;f1 to restart
  beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
+ ldx row
+ ldy col
  cmp #a		 	;a pressed
  beq playleft	 	; move left
  cmp #d		 	;d pressed
@@ -559,36 +582,24 @@ top:			; top of loop
  beq playup
  cmp #s			 ;s pressed
  beq playdown
-; cmp #33
-; beq attack
- bne next			 ; neither pressed
-
+ rts
+ 
 playleft:
   jsr left		 ; subroutine to move left
-  jmp next
+  rts
 
 playright:
  jsr right		; subroutine to move right
- jmp next
+ rts
 
 playup:
  jsr up
- jmp next
+ rts
 
 playdown:
  jsr down
+ rts
 
-next:
-  ;Wait for user to press enter, and restore the character set
- pla			; pull acc from stack
- sta $9005 		; store in char mem
- lda $00c5		 ; current key held down -> page 179 of vic20 manual
- cmp f5		 ; check if Q is pressed -> quit
- beq quit		 ;continue input
- jmp top
-quit:
- jsr $e55f       ; clear screen before exiting
- brk			 ; quit
 
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
 ;that we aren't just seeing W,A,S,D being typed without the code
@@ -598,76 +609,44 @@ attack:
  sta $900b			 ; store sound
  rts
 
-loadRowColLR:
- jsr col_bot_set_0
- ldx row			;load rows
- ldy col			;load cols
- rts
+;checks space you want to move into
+;if there is something there, return 1 in y
+;else, return 0 in y
 left:
- jsr loadRowColLR
- cpy col_mid_down			;check if cols > 11 (bottom half of screen)
- bmi updateLeft		;not bottom of screen
- beq leftCheck		; =11, so check if far right side
- bpl leftBot		; for sure bottom
-leftCheck:
- cpx row_mid_left			 ; check if row > 15, (bottom of screen)
- bmi updateLeft		;not bottom of screen
-leftBot:
- jsr col_bot_set_1
-updateLeft:
+ lda #space_sprite
  cpx row_begin				; check if end of screen on left
- beq updateNewLocBounce	; don't move character because it is at end of left screen
- jsr updatePrevLoc
+ beq moveEnd
+ jsr drawToPlayfield	;removes previous location
  dec row				; rows -1
- jmp updateNewLocBounce
+ rts
 
 right:			;similar as above left subroutine
- jsr loadRowColLR
- cpy col_mid_down
- bmi updateRight
- beq rightCheck
- bpl rightBot
-rightCheck:
- cpx row_mid_right		 	; check if x >13
- bmi updateRight
-rightBot:
- jsr col_bot_set_1
-updateRight:
+ lda #space_sprite
  cpx #row_end		 ; check if x =21 (end of right)
- beq updateNewLocBounce	 ; at end of screen right
- jsr updatePrevLoc
+ beq moveEnd
+ jsr drawToPlayfield
  inc row 		 ; rows +1
- jmp updateNewLocBounce
-
-updateNewLocBounce:	;fix branch out of range
- jmp updateNewLoc
+ rts
 
 up:
- jsr col_bot_set_0
- ldx col			;top cols
- cpx col_begin		 ; check if x < 21 (on top row)
- beq updateNewLoc	 ; at end of screen top
- cpx col_mid_up			;else, check if in top half of screen
- bmi updateUp		;yes, in top half of screen
- jsr col_bot_set_1
-updateUp:
- jsr updatePrevLoc
+ lda #space_sprite
+ cpy col_begin
+ beq moveEnd
+ jsr drawToPlayfield
  dec col 			 ; cols -1
- jmp updateNewLoc
+ rts
 
 down:
- jsr col_bot_set_0
- ldx col
- cpx col_mid_down	 ; check if bottom (greater than last spot on second to bottom row)
- bmi updateDown
- jsr col_bot_set_1
- cpx col_end			;check very bottom of screen
- beq updateNewLoc
-updateDown:
- jsr updatePrevLoc
+ lda #space_sprite
+ cpy col_end
+ beq moveEnd
+ jsr drawToPlayfield
  inc col 		 ; cols + 1
- jmp updateNewLoc
+ rts
 
+moveEnd:
+ rts
+ 
 updateNewLoc:
  jsr getRowColForm	;get row/col
  jsr collision	; collision detection
