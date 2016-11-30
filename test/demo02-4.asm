@@ -501,8 +501,10 @@ initEnemyLocation:
   lda #enemy_sprite
   sta graphics_playfield_start,x ;potential problem/not problem: enemies
 							;can only spawn 255 spaces past graphics_playfield_start
-  lda #char_colour
-  adc #$10
+  ;lda #char_colour
+  jsr getRandom	;just gets a random colour for now, change this when have more memory
+ ; adc #$10
+
   sta color_playfield_start,x
   dey
   cpy #$00
@@ -758,7 +760,8 @@ colsnext:
 loseLife:			;player dies
  lda #space_sprite
  ldx lives		;this
- jsr drawToScreen
+ ;jsr drawToScreen
+ jsr drawToStatus
  dec lives
  lda lives
  cmp #$00
