@@ -21,6 +21,7 @@ s = #41
 d = #18
 f5 = #55
 f1 = #39
+f3 = #47
 char_colour = #$55
 wall_colour = #$44
 life_colour = 2
