@@ -548,13 +548,15 @@ top:			; top of loop
  pha				; push to stack
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
  sta current_key
- jsr move
+ jsr move		;move also handles collision detection, but not as bad as before
+
+;--------drawing player to screen. TODO: make into a subroutine or smth
  ldx row
  ldy col
  lda #p1_sprite
  jsr drawToPlayfield
  jsr drawTimer
- ;jsr checkCollision
+;;--------------------End of drawing character to screen
 
 next:
   ;Wait for user to press enter, and restore the character set
@@ -600,7 +602,6 @@ playdown:
  jsr down
  rts
 
-
 ;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
 ;that we aren't just seeing W,A,S,D being typed without the code
 ;working.
@@ -618,6 +619,10 @@ left:
  beq moveEnd
  jsr drawToPlayfield	;removes previous location
  dec row				; rows -1
+ jsr checkCollision	;checks if object in space
+ cmp #$01		;yes, object in space
+ bne moveEnd
+ inc row		;put character back into original location
  rts
 
 right:			;similar as above left subroutine
@@ -626,6 +631,10 @@ right:			;similar as above left subroutine
  beq moveEnd
  jsr drawToPlayfield
  inc row 		 ; rows +1
+ jsr checkCollision
+ cmp #$01
+ bne moveEnd
+ dec row
  rts
 
 up:
@@ -634,6 +643,13 @@ up:
  beq moveEnd
  jsr drawToPlayfield
  dec col 			 ; cols -1
+ jsr checkCollision		;checks if next space is occupied
+ ;checks for various characters
+ ;potential animation loop
+ ;at the moment, it just doesn't let the player eat the objects
+ cmp #$01		;if there is an obstacle, then move back to previous space
+ bne moveEnd	
+ inc col
  rts
 
 down:
@@ -642,79 +658,32 @@ down:
  beq moveEnd
  jsr drawToPlayfield
  inc col 		 ; cols + 1
+ jsr checkCollision
+ cmp #$01
+ bne moveEnd
+ dec col
  rts
 
 moveEnd:
  rts
  
-updateNewLoc:
- jsr getRowColForm	;get row/col
- jsr collision	; collision detection
- rts			; return
-
-updatePrevLoc:		;updates where player previously was
- jsr getRowColForm
- lda col_bot		;check if bottom or top of screen
- cmp #$01
- bne checkColToTop
- beq checkColToBot
-
-checkColToTop:	;going from bottom to top
- lda row
- cmp #$0d
- beq checkLeftToTop
- bpl checkRowsToTop
- lda col
- cmp #$0c		;going from bottom to top
- beq prevBot	;prev location was bottom
- bne prevLocIsTop
-
-checkColToBot:	; going from top to bottom
- lda row
- cmp #$0d
- beq checkRightToBot	;check 255th byte
- bpl checkRowsToBot
- lda col
- cmp col_mid_down		;check if col is 11
- beq prevLocIsTop	;going from top to bottom
- bne prevBot
-
-checkLeftToTop:	;check row 0b going from bottom to top from left
- lda col
- cmp col_mid_down			;check if in row 0b
- beq prevLocIsTop	;yes,
- bne checkRowsToTop	;no, so check for another row
-
-checkRightToBot:	;check moving right to bottom around 255th byte
- lda col
- cmp col_mid_down
- beq prevLocIsTop	;moving from top to bot
- bne prevBot		;nope, on bottom
-
-checkRowsToTop:		;check moving from 0c to 0b
- lda col
- cmp col_mid_down
- bpl prevBot		; on bottom if > 0b
- bne prevLocIsTop
-
-checkRowsToBot:		;check moving from 0b to 0c
- lda col
- cmp #$0a
- beq prevLocIsTop
- bne prevBot
-
-prevLocIsTop:
- lda #space_sprite	 	;  space
- jsr drawToScreen
+;super basic collision detection
+checkCollision:
+ ldx row
+ ldy col
+ lda #$00
+ jsr getFromScreen
+ ;check enemy
+ ;check wall
+ ;check items
+ cmp #space_sprite	;everything else but space is collision at moment
+ beq noColl
+ lda #$01		;else, for moment, collision
+ rts
+noColl:		;no collision
+ lda #$00
  rts
 
- ;Note: also need to check for border from top to bottom:
- ;if bottom register =1 and 1004 (key pressed) is down, then
- ;draw top
-prevBot:
- lda #space_sprite
- jsr drawToScreenBot	;draw space over previous move
- rts
 
 getRowColForm:		;get coord in row +column
  ldy #$00
