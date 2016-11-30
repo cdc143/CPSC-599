@@ -45,8 +45,51 @@
 
  lda #$0f		 ; 15
  sta $900e		; set sound bits/turn on volume (see)
- ;changes the char_colour of text -> page 173 vic manual
+ jsr $ffbd 		;initialize clock
 
+
+ lda char_colour
+ sta drawColour
+
+;Super crappy title page.  TODO: Fix and make legible.
+;I blasted away the names, but will put back later.
+titleScreen:
+ jsr $e55f		;clear screen
+ lda #$0f		;temporary colour start
+ sta drawColour
+ sta $900f
+ ;jsr levLoadMain 	;load level 3 to screen
+ ;lda temp_colour
+ ;sta $900f
+drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
+ jsr $ffde 		;read clock
+ cmp #$01		
+ bne titleInput
+ sec	;set carry bit
+ dec drawColour	;random colour, pretty much
+ lda drawColour
+ sta $900f		 		; store in screen and border register  
+ 
+titleInput:
+ lda $00c5			;check for start.  Only can press start right now. Probably should 
+ sta current_key
+ cmp #f3
+ beq gameLoopTop
+ jsr checkRestartQuit
+ bne drawTitleAnimation
+ 
+;checks keys f1 and f5.  This subroutine gets rid of some stuff down below in code.
+checkRestartQuit:
+ lda current_key
+ cmp #f1
+ beq titleScreen
+ cmp #f5
+ bne retRestQuit
+ jsr $e55f
+ brk
+retRestQuit:
+ rts
+ 
 gameLoopTop:
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
@@ -68,9 +111,15 @@ gameLoopTop:
  ;########################## METHODS TO INIT DATA AND UTILITY METHODS HERE #####
 
 getRandom:
- lda $9114
- adc $9004
+ stx Scratch
+ sty Scratch2
+ jsr $ffde 	;call timer
+ txa
+ adc $9114
+ adc $9004 
  sta seed
+ ldx Scratch
+ ldy Scratch2
  rts
 
 genRoom:
@@ -490,7 +539,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  beq quitBounce
  cmp #f1 ;f1 to restart
  bne gameOverEnd
- jmp gameLoopTop
+ jmp titleScreen
 
 initEnemyLocation:
   jsr getRandom
@@ -503,8 +552,9 @@ initEnemyLocation:
 							;can only spawn 255 spaces past graphics_playfield_start
   ;lda #char_colour
   jsr getRandom	;just gets a random colour for now, change this when have more memory
- ; adc #$10
-
+  and #$07
+  ;adc #$0b
+  ;and #$3c ;00111100
   sta color_playfield_start,x
   dey
   cpy #$00
@@ -1119,6 +1169,13 @@ room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 drawChar:				dc.b 0
 drawColour:			dc.b 0
 Scratch:				dc.b 0
+Scratch2:				dc.b 0
 Ycoor:        dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
+titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
+titleNameEnd
+titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
+titleAuthorsEnd
+gameOverMessage: dc.b #07, #01, #13, #05, #32, #15, #22, #05, #18
+gameOverMessageEnd 
