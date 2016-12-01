@@ -844,6 +844,8 @@ collisionAction:
 wallColl:
  lda #$ef
  sta cur_char_col
+ lda #$00
+ sta invinc_time
  lda #$01		;for no move function
  rts
 
@@ -868,10 +870,8 @@ checkInvincible:
  
 notInvincible:
  jsr loseLife
- lda #$00
- ldx #$00
- ldy #$00
- jsr $ffbd		;reset clock
+ lda #$06
+ sta invinc_time
  lda #$02
  sta cur_char_col
  rts
@@ -880,12 +880,18 @@ isInvincible:
  lda cur_char_col
  cmp #char_colour
  beq stillInvincible 	;jump over
- jsr $ffde
- cmp #$5f		;this ends up being "random" amount of invincibility
- bmi stillInvincible
+ lda invinc_time
+ cmp #$00
+ bne stillInvincible
  lda #char_colour
  sta cur_char_col
 stillInvincible:
+ dec invinc_time
+ cmp #$03
+ bpl invinRet
+ lda #$01
+ sta cur_char_col
+invinRet:
  rts
  
 ;TODO: DOOR COLLISION
@@ -1029,9 +1035,7 @@ prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 row:						dc.b 0
 col:						dc.b 0
-col_bot:				dc.b 0
-coll_loop_count:		dc.b 0
-portal_counter:		dc.b 0
+invinc_time:		dc.b 0
 init_lives:				dc.b #$08
 lives:					dc.b 0
 current_key:			dc.b 0
@@ -1043,21 +1047,12 @@ cur_char_col:	dc.b 0
 row_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$14
-row_mid_left:		dc.b #$0f
-row_mid_right:		dc.b #$0d
 
 col_begin:				dc.b #$00
-col_mid_down:		dc.b #$0b
-col_mid_up:			dc.b #$0d
-;col_mid           dc.b #$0a
 col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
-
-isCollision		dc.b #$00
-anim_time:		dc.b #$40	;time for animation
-pos_to_compare dc.b 0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ;drawToPlayfield vars
