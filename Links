@@ -11,9 +11,9 @@ To Do
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
--Enemy health by colors
+-Enemy health by colors //km -> we are out of memory, screen freaks out when I try 
 -Swords and potions and and enemy damage (different color). //CD start on swords, portal and potion positioning
 -Moving floors (loop the code)
 -Difficulty settings
--Custom character set
--Sound for in game events
+-Custom character set //CD will work on designing some characters and creating some test code to print them
+-Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete
