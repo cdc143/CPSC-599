@@ -48,7 +48,7 @@
  jsr $ffbd 		;initialize clock
 
 
- lda char_colour
+ lda #char_colour
  sta drawColour
 
 ;Super crappy title page.  TODO: Fix and make legible.
@@ -493,10 +493,6 @@ putPotion: ;Assumes x coordinate and y coordinate to draw will be passed in
   pla
   rts
 
-
-
-
-
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   ldx #$00
   lda #wall_colour
@@ -585,13 +581,19 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  and #$07
  tay
  jsr initEnemyLocation
- jsr getRowColForm
+ lda #char_colour
+ sta cur_char_col
+ sta drawColour
  lda #p1_sprite		; 'B'
- jsr drawToScreen
+ ;jsr drawToScreen
+ ldx row
+ ldy col
+ jsr drawToPlayfield
  pla			; pull acc from stack
  sta $9005		; store in char memory
 
 top:			; top of loop
+ jsr isInvincible	;check if player still "injured"
  lda #$00
  sta $900b			 ; store sound
  lda $9005			; load char memory
@@ -603,6 +605,8 @@ top:			; top of loop
 ;--------drawing player to screen. TODO: make into a subroutine or smth
  ldx row
  ldy col
+ lda cur_char_col
+ sta drawColour
  lda #p1_sprite
  jsr drawToPlayfield
  jsr drawTimer
@@ -670,8 +674,9 @@ left:
  jsr drawToPlayfield	;removes previous location
  dec row				; rows -1
  jsr checkCollision	;checks if object in space
- cmp #$01		;yes, object in space
- bne moveEnd
+ jsr collisionAction
+ cmp #$00	;space
+ beq moveEnd
  inc row		;put character back into original location
  rts
 
@@ -682,8 +687,9 @@ right:			;similar as above left subroutine
  jsr drawToPlayfield
  inc row 		 ; rows +1
  jsr checkCollision
- cmp #$01
- bne moveEnd
+ jsr collisionAction
+ cmp #$00
+ beq moveEnd
  dec row
  rts
 
@@ -694,11 +700,12 @@ up:
  jsr drawToPlayfield
  dec col 			 ; cols -1
  jsr checkCollision		;checks if next space is occupied
+ jsr collisionAction
  ;checks for various characters
  ;potential animation loop
  ;at the moment, it just doesn't let the player eat the objects
- cmp #$01		;if there is an obstacle, then move back to previous space
- bne moveEnd	
+ cmp #$00		;if there is an obstacle, then move back to previous space
+ beq moveEnd	
  inc col
  rts
 
@@ -709,52 +716,130 @@ down:
  jsr drawToPlayfield
  inc col 		 ; cols + 1
  jsr checkCollision
- cmp #$01
- bne moveEnd
+ jsr collisionAction
+ cmp #$00
+ beq moveEnd
  dec col
  rts
 
 moveEnd:
  rts
  
-;super basic collision detection
+
+;============================COLLISION DETECTION===================
+;Checks for collisions between items
+;returns value in accumulator based on what player hits
 checkCollision:
  ldx row
  ldy col
  lda #$00
  jsr getFromScreen
- ;check enemy
- ;check wall
- ;check items
- cmp #space_sprite	;everything else but space is collision at moment
+ tax
+ cpx #space_sprite	;everything else but space is collision at moment
  beq noColl
- lda #$01		;else, for moment, collision
+ lda #$01
+ cpx #wall_sprite	;collision with wall
+ beq endColl
+ lda #$02	
+ cpx #portal_sprite	;portal
+ beq endColl
+ lda #$03
+ cpx #enemy_sprite	;enemy
+ beq endColl
+ lda #$04	;drop sprite
+ cpx #door_sprite
+ beq endColl
+ lda #$05
  rts
+ 
 noColl:		;no collision
  lda #$00
+endColl:
+ rts 
+
+;Subroutine that takes value in accumulator and 
+;does collision based on value
+collisionAction:
+ cmp #$01	;wall
+ beq wallColl
+ cmp #$02	;portal
+ beq portalColl
+ cmp #$03	;enemy
+ beq enemyColl
+ cmp #$04	;door
+ beq doorColl
+ cmp #$05	;drop
+ beq dropColl
+ bne noColl	;default
+
+;changes colour of player and prevents them from running into wall
+wallColl:
+ lda #$ef
+ sta cur_char_col
+ lda #$01		;for no move function
  rts
 
-
-getRowColForm:		;get coord in row +column
+;portal animation
+portalColl:
+ jmp portalAnimation
+ 
+;crash into enemy: change player colour lose life if not invincible
+enemyColl:
+ ;lda #$02
+; sta cur_char_col
+ jsr checkInvincible
+ lda #$01		;no move
+ rts
+ 
+;check if invincible 
+checkInvincible:
+ lda cur_char_col
+ cmp #char_colour
+ beq notInvincible
+ rts
+ 
+notInvincible:
+ jsr loseLife
+ lda #$00
+ ldx #$00
  ldy #$00
- ldx col
-addCols:		;converts to row spacing
- cpx #$00
- beq colsnext
- tya
- clc
- adc #$16		; amount of spaces it takes to get to row below
- tay
- dex 			; decrement number of rows left
- cpx #$00
- bne addCols
- tya
- clc
- adc row
- tax
-colsnext:
+ jsr $ffbd		;reset clock
+ lda #$02
+ sta cur_char_col
  rts
 
+isInvincible:
+ lda cur_char_col
+ cmp #char_colour
+ beq stillInvincible 	;jump over
+ jsr $ffde
+ cmp #$5f		;this ends up being "random" amount of invincibility
+ bmi stillInvincible
+ lda #char_colour
+ sta cur_char_col
+stillInvincible:
+ rts
+ 
+;TODO: DOOR COLLISION
+doorColl:
+ ;INSERT CODE HERE
+ ;
+ ;
+ ;
+ ;
+ lda #$00
+ rts
+ 
+dropColl:
+ lda #$03	;indicate picked up a drop
+ ;TODO: subroutine to decide what to do with drop
+ ;
+ ;
+ ;
+ ;
+ lda #$00	;move over drop
+ rts
+ 
 loseLife:			;player dies
  lda #space_sprite
  ldx lives		;this
@@ -766,42 +851,6 @@ loseLife:			;player dies
  bpl loseLifeNext
  jmp gameOver
 loseLifeNext:
- rts
-
-collision:		 ; detect collision between B and C
- ldy #$01
- sty coll_loop_count	;reg for coll animation
- lda col_bot
- cmp #$01
- beq collision_bot
- ldy graphics_top,x	; load current char
- bne collision_compares	;branch instead of using jmp
-collision_bot:
- ldy graphics_bot,x
-collision_compares:
- cpy #wall_sprite
- beq drawcoll
- jsr checkPortalOrLevel
- cpy #enemy_sprite		; check if character is enemy
- bne drawCharacter	; not C
- ldy #$05			;set up all this for collision
- sty coll_loop_count			;reg for coll animation loops
- ldy #$06
- sty coll_char_colour	; char_colour
- jsr loseLife		;lose a life
-drawcoll:
- jsr collAnimationLoop
- jsr drawCharacter
- rts
-
-checkPortalOrLevel:
- cpy #portal_sprite
- beq portalAnimation
- cpy #door_sprite
- bne notNewLevel
- jsr loadNewLevel
- jmp initCharsNextLevel	;loads character, lives, and enemies into next level
-notNewLevel:
  rts
 
 portalAnimation:
@@ -821,240 +870,9 @@ portalAnimTop:
  jmp gameLoopTop		;note: this currently resets game.
 					;TODO: not completely reset game (like switching rooms)
 
-drawCharacter:
- ldy col_bot
- cpy #$01
- beq drawBottom
- jsr getRowColForm
- lda #p1_sprite		; 'B'
- bcs drawBottom	;check for row #$12/divider row between top and bottom
- bcc drawTop
-
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
- rts
-
-drawBottom:
- jsr getRowColForm
- lda #p1_sprite ;#$01
- jsr drawToScreenBot
- jsr drawTimer
- rts
-
-drawTop:
- jsr drawToScreen
- jsr drawTimer
- rts
-
-drawToScreen:
- sta graphics_top,x	; store space
- lda #char_colour		; char_colour to black
- sta char_colour_loc_top,x	; store char_colour in new location too
- rts
-
-drawToScreenBot:
- sta graphics_bot,x	; store space
- lda #char_colour		; char_colour to black
- sta char_colour_loc_bot,x	; store char_colour in new location too
- rts
-
-collAnimationLoop:
- jsr collMovementCheck	;check where collision moves piece
- ;jsr checkColBot		;check top or bottom
- jsr collisionAnimation	;collision animation
- lda #space_sprite
- ldy col_bot
- cpy #$01
- beq drawSpaceBot
- jsr drawToScreen
- jmp animLoopNext
-drawSpaceBot:
- jsr drawToScreenBot
-animLoopNext:
- dec coll_char_colour
- dec coll_loop_count
- ldx coll_loop_count
- cpx #$00
- bne collAnimationLoop
- rts
-
-col_bot_set_1:		;sets col_bot to 1
- lda #$01
- sta col_bot
- rts
-
-col_bot_set_0:		;sets col_bot to 0
- lda #$00
- sta col_bot
- rts
-
-check0or1:
- stx pos_to_compare
- cmp pos_to_compare
- bmi col_bot_set_0
- bpl col_bot_set_1
- rts
-
-checkHorizontalColBot:	;animation moves right or left
- ldx #$0e			;check if in middle of row
- jmp check0or1
-checkUpColBot:			;animation moves down. This works
- ldx row
- cpx #$0e				;check if in middle of row
- bpl checkUpColBotLeft
- cmp col_mid_down		;animation moves down right side of screen
- bpl col_bot_set_0
- bmi col_bot_set_1
-checkUpColBotLeft:		;animation moves down left side of screen
- ldx #$0a			;check if in middle of col
- jmp check0or1
-checkDownColBot:		;animation moves up
- ldx row
- cpx #$0e			;check if in middle of row
- bpl checkDownColBotLeft
- ldx col_mid_up			;up and right side of screen
- jmp check0or1
-checkDownColBotLeft:	;up and left side of screen
- ldx #$0a
- jmp check0or1
-
-collisionAnimation:
- jsr getRowColForm
- lda #p1_sprite
- ldy col_bot
- cpy #$01
- beq storeNewCollBot
- sta graphics_top,x	; store in new index
- lda coll_char_colour		    ; char_colour
- sta char_colour_loc_top,x	; store char_colour
- jmp collAnimNext
-storeNewCollBot:
- lda #p1_sprite	;#$02
- sta graphics_bot,x	; store in new index
- lda coll_char_colour		    ; char_colour
- sta char_colour_loc_bot,x	; store char_colour
-collAnimNext:
- lda anim_time;#$6e		; arbitrary number for timer
- jsr timerLoop	; jump to timer
- rts
-
-collMovementCheck:
- lda current_key		 ; current key held down -> page 179 of vic20 manual
- cmp a		 ;a pressed
- beq collLeft	 ; move left
- cmp d		 ;d pressed
- beq collRight
- cmp w	 ;w pressed
- beq collUp
- cmp s		 ;s pressed
- beq collDownBounce
- bne collRight ;default
-
-collLeft:		;a pressed
- jsr getRowColForm
- inx
- jsr collTop
- cmp #$01
- beq collRet
- ldx row
- cpx #row_end		;check if far left
- beq collRet
- inc row			;else increment row
-checkCol_Bot_hori:
- lda col
- cmp col_mid_down	;check for left/right movement
- bmi set_0
- beq checkColH	;awkward middle transition point
- bpl set_1
-checkColH:
- lda row
- jsr checkHorizontalColBot
- ;perhaps check col_bot here
- rts
-
-collRight:	;d pressed
- jsr getRowColForm
- dex
- jsr collTop
- cmp #$01
- beq collRet
- ldx row
- cpx row_begin
- beq collRet
- dec row
- bne checkCol_Bot_hori	;branch over
-
-set_0:
- jsr col_bot_set_0
- rts
-set_1:
- jsr col_bot_set_1
- rts
-
-collDownBounce:
- jsr collDown
-collRet:
- rts
-
-collUp:	;w pressed
- jsr getRowColForm
- txa
- clc
- adc #$16	;add another row
- tax
- jsr collTop
- cmp #$01
- beq collRet
- ldx col
- cpx col_end
- beq collRet
- inc col
-checkCol_Bot_vert:
- lda col
- cmp col_mid_down	;check for left/right movement
- bmi set_0
- beq checkColV	;awkward middle transition point
- bpl set_1
-checkColV:
- lda col
- jsr checkDownColBot
- rts
-
-collDown:	;s pressed
- jsr getRowColForm
- txa
- sec
- sbc #$16	;add another row
- tax
- jsr collTop
- cmp #$01
- beq collRet
- ldx col
- cpx col_begin
- beq collRet
- dec col
- bne checkCol_Bot_vert	;this seems to work even though it probably shouldn't
-
-collTop:
- lda col_bot
- cmp #$01
- bne collRightTop
- lda graphics_bot,x
- jmp compareCollRight
-collRightTop:
- lda graphics_top,x
-compareCollRight:
- cmp #wall_sprite
- beq collTopSet1
- cmp #enemy_sprite
- beq collTopSet1
- tay
- jsr checkPortalOrLevel	;check if you hit portal or doorway during collision animation
- lda #$00
- rts
-collTopSet1:
- lda #$01
  rts
 
 timerLoop:		 ; super simple loop to slow down movement of 'B' (not have it fly across screen)
@@ -1144,7 +962,7 @@ inventory:				dc.b 0
 pi_weapon:			dc.b #94
 temp_colour:			dc.b 0
 timer_loop:			dc.b 0
-coll_char_colour:	dc.b 0
+cur_char_col:	dc.b 0
 row_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$14
