@@ -55,12 +55,46 @@
 ;I blasted away the names, but will put back later.
 titleScreen:
  jsr $e55f		;clear screen
- lda #$0f		;temporary colour start
+ lda #char_colour		;temporary colour start
  sta drawColour
  sta $900f
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
+ lda #$09 
+ sta Scratch2
+ lda #$05			;screen coord for title; too lazy to use x,y coords
+ sta col
+ lda #titleNameEnd-titleName-1	;length
+ sta row
+drawTitleLoop:		;draw title to screen
+ ldx row
+ lda titleName,x
+ jsr incIndex
+ ldy col
+ jsr drawToPlayfield
+ dec row		;index -1
+ lda row
+ cmp #$00
+ bpl drawTitleLoop
+ lda #$07
+ sta Scratch2
+ lda #$06		;screen coord for author names
+ sta col
+ lda #titleAuthorsEnd-titleAuthors-1	
+ sta row
+drawAuthorLoop:
+ ldx row
+ ldy col
+ lda titleAuthors,x
+ jsr incIndex
+ jsr drawToPlayfield
+ dec row
+ lda row
+ cmp #$00
+ bpl drawAuthorLoop
+ lda temp_colour
+ sta $900f		 		; store in screen and border register  
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr $ffde 		;read clock
  cmp #$01		
@@ -75,21 +109,23 @@ titleInput:
  sta current_key
  cmp #f3
  beq gameLoopTop
- jsr checkRestartQuit
- bne drawTitleAnimation
- 
-;checks keys f1 and f5.  This subroutine gets rid of some stuff down below in code.
-checkRestartQuit:
- lda current_key
  cmp #f1
  beq titleScreen
  cmp #f5
- bne retRestQuit
+ bne drawTitleAnimation
  jsr $e55f
  brk
-retRestQuit:
- rts
- 
+
+incIndex:
+ sty Scratch
+ ldy Scratch2
+incIndexLoop:
+ inx 
+ dey
+ cpy #$00
+ bne incIndexLoop
+ ldy Scratch
+ rts 
 gameLoopTop:
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
