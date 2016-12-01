@@ -82,6 +82,8 @@ genRoomLoop:
  iny
  cpy #$09
  bne genRoomLoop
+ lda #$07
+ sta rooms
  rts
 
 initRoomAddr:
@@ -115,6 +117,24 @@ initRoomAddr:
   inx
   lda #>level4
   sta room_addr,x
+  inx
+  lda #<level5 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level5
+  sta room_addr,x
+  inx
+  lda #<level6 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level6
+  sta room_addr,x
+  inx
+  lda #<level7 ;low byte
+  sta room_addr,x
+  inx
+  lda #>level7
+  sta room_addr,x
   rts
 
 initPRowAddr:
@@ -147,6 +167,54 @@ initPRowAddr:
   sta prow_addr,x
   inx
   lda #>prow4
+  sta prow_addr,x
+  inx
+  lda #<prow5
+  sta prow_addr,x
+  inx
+  lda #>prow5
+  sta prow_addr,x
+  inx
+  lda #<prow6
+  sta prow_addr,x
+  inx
+  lda #>prow6
+  sta prow_addr,x
+  inx
+  lda #<prow7
+  sta prow_addr,x
+  inx
+  lda #>prow7
+  sta prow_addr,x
+  inx
+  lda #<prow8
+  sta prow_addr,x
+  inx
+  lda #>prow8
+  sta prow_addr,x
+  inx
+  lda #<prow9
+  sta prow_addr,x
+  inx
+  lda #>prow9
+  sta prow_addr,x
+  inx
+  lda #<prowa
+  sta prow_addr,x
+  inx
+  lda #>prowa
+  sta prow_addr,x
+  inx
+  lda #<prowb
+  sta prow_addr,x
+  inx
+  lda #>prowb
+  sta prow_addr,x
+  inx
+  lda #<prowc
+  sta prow_addr,x
+  inx
+  lda #>prowc
   sta prow_addr,x
   rts
 
@@ -373,7 +441,7 @@ putRightDoor:
   rts
 putTopDoor:
   ldx #$0a
-  ldy #$01
+  ldy #$00
   lda #door_sprite
   jsr drawToPlayfield
   rts
@@ -1120,16 +1188,24 @@ level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$04,$04,$04,$04,$04
 level1: dc.b $01,$02,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$01
 level2: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level3: dc.b $01,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01
-level4: dc.b 0
-level5: dc.b 0
-level6: dc.b 0
-level7: dc.b 0
+level4: dc.b $01,$05,$05,$05,$05,$05,$05,$05,$05,$02,$02,$02,$05,$05,$05,$05,$05,$05,$05,$01
+level5: dc.b $01,$05,$05,$05,$05,$02,$06,$06,$06,$06,$06,$02,$06,$06,$06,$06,$02,$05,$05,$01
+level6: dc.b $01,$05,$05,$05,$02,$07,$07,$07,$07,$07,$07,$02,$07,$07,$07,$07,$07,$07,$02,$01
+level7: dc.b $01,$05,$04,$08,$09,$0a,$0b,$0c,$02,$02,$02,$02,$0c,$0b,$0a,$09,$08,$04,$05,$01
 prow0: dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 prow1: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
 prow3: dc.b $66,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,$66,$20,$20,$20,$66
 prow4: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0
+prow5: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+prow6: dc.b $66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66
+prow7: dc.b $66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66
+prow8: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66
+prow9: dc.b $66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66
+prowa: dc.b $66,$66,$66,$66,$66,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66
+prowb: dc.b $66,$66,$66,$66,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66
+prowc: dc.b $66,$66,$66,$66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66
+prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 row:						dc.b 0
 col:						dc.b 0
