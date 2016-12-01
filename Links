@@ -4,10 +4,10 @@ Maps:
 https://drive.google.com/drive/folders/0B7TVTVLBQt-TRWNkR1k3ZDNRcG8?usp=sharing
 To Do
 
-(3x3 8 layouts) //CD 3x3 layout complete, need to do more levels
+(3x3 8 layouts) //CD (Done)
 -Game loop
 -Convert all drawing and collision routines     // LM partial work started in my local files, needs a game loop to work properly
--Convert all levels to new level layout routine //CD (Orig 4 levels complete)
+-Convert all levels to new level layout routine //CD (Done)
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
