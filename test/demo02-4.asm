@@ -129,6 +129,8 @@ incIndexLoop:
 ;#########################END TITLE PAGE########################## 
 
 gameLoopTop:
+ lda #$00
+ sta prev_note
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
  ;Setup new location for characters
@@ -638,6 +640,7 @@ gameOver: ;
 ;TODO: Print "Game over"
  lda #$3e		 ; game over border/background colour blue/light blue
  sta $900f		 ; store in screen and border register
+ jsr SOUNDOFFALL
  lda #135
  jsr SOUNDONHIGH	;play "lose sound"
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
@@ -652,18 +655,18 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
 initEnemyLocation:
   jsr getRandom
   tax
-  lda graphics_playfield_start,x
+  lda graphics_top,x
   cmp #space_sprite
   bne initEnemyLocation
   lda #enemy_sprite
-  sta graphics_playfield_start,x ;potential problem/not problem: enemies
+  sta graphics_top,x ;potential problem/not problem: enemies
 							;can only spawn 255 spaces past graphics_playfield_start
   ;lda #char_colour
   jsr getRandom	;just gets a random colour for now, change this when have more memory
   and #$07
   ;adc #$0b
   ;and #$3c ;00111100
-  sta color_playfield_start,x
+  sta char_colour_loc_top,x
   dey
   cpy #$00
   bne initEnemyLocation
@@ -706,6 +709,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
 
 top:			; top of loop
  jsr isInvincible	;check if player still "injured"
+ jsr playMusic
  jsr chktim
  lda #$00
  sta $900b			 ; store sound
@@ -724,6 +728,8 @@ top:			; top of loop
  jsr drawToPlayfield
  jsr drawTimer
 ;;--------------------End of drawing character to screen
+
+;put enemy movement here
 
 next:
   ;Wait for user to press enter, and restore the character set
@@ -900,6 +906,22 @@ SOUNDOFFHIGH:
  sta $900c
  rts
  
+SOUNDONMID:
+ sta $900b
+ rts
+ 
+SOUNDOFFMID:
+ lda #0
+ sta $900b
+ rts
+ 
+SOUNDOFFALL:
+ lda #0
+ sta $900a
+ sta $900b
+ sta $900c
+ rts
+ 
 ;INPUT: none
 chktim:
  jsr $ffde ;call timer
@@ -1049,6 +1071,13 @@ checkInvincible:
  rts
  
 notInvincible:
+ ldx row
+ ldy col
+ jsr getFromScreen	;get colour value
+ lda drawColour
+ and #$07		;get colour value between 0-7
+ lsr			;divide colour by 2
+ sta Scratch	;store in Scratch variable
  jsr loseLife
  lda #135
  jsr SOUNDONLOW
@@ -1096,16 +1125,21 @@ dropColl:
  lda #$00	;move over drop
  rts
  
-loseLife:			;player dies
+;ARGUMENTS: Scratch: damage given to enemy
+loseLife:			
  lda #space_sprite
- ldx lives		;this
+ ldx lives		;x value 
  ldy #$00
- jsr drawToStatus
+ jsr drawToStatus	;draw over rightmost life, then decrement
  dec lives
- lda lives
+ dec Scratch		;Scratch used to loop until done giving damage
+ lda Scratch
  cmp #$00
- bpl loseLifeNext
- jmp gameOver
+ bpl loseLife
+ lda lives					
+ cmp #$00			;check if player out of lives
+ bpl loseLifeNext	;still alive
+ jmp gameOver		;rip
 loseLifeNext:
  rts
 
@@ -1126,6 +1160,27 @@ portalAnimTop:
  jmp gameLoopTop		;note: this currently resets game.
 					;TODO: not completely reset game (like switching rooms)
 
+playMusic: 
+ jsr $ffde
+ cmp prev_note
+ bne musicEnd
+ sta prev_note
+ and #$01
+ cmp #$00
+ beq playNoteB
+ bne playNoteA
+
+playNoteA:
+ lda #220
+ jsr SOUNDONMID
+ rts
+playNoteB:
+ lda #240
+ jsr SOUNDONMID
+ rts
+musicEnd:
+ rts
+ 
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -1224,13 +1279,13 @@ current_key:			dc.b 0
 prev_direction:			dc.b 0
 inventory:				dc.b 0
 pi_weapon:			dc.b #94
+prev_note:			dc.b 0
 temp_colour:			dc.b 0
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
 row_begin:			dc.b #$00
 row_newLevel_begin: dc.b #$01
 col_newLevel_end:   dc.b #$14
-
 col_begin:				dc.b #$00
 col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
