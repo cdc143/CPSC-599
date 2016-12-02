@@ -394,15 +394,19 @@ getFromScreen:
  cpy #$0a
  BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
+ lda char_colour_loc_top,y
+ sta drawColour
  lda graphics_top,y				; get the character back from the screen
  rts
-
+ 
 getFromScreenBot:
  tya									; put Y in Accumulator
  sec
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
+ lda char_colour_loc_bot,y
+ sta drawColour
  lda graphics_bot,y				; get the character back from the screen
  rts
 
@@ -826,8 +830,23 @@ drawSwordAttack2:
  jsr SOUNDONLOW
  rts
  
-hitEnemy:				
- lda #175				;different sound if player hits an enemy
+hitEnemy:	
+ jsr attackDirection	;get location of enemy
+ lda drawColour		
+ and #$07		;mask because drawColour returns values >8
+ cmp #$01		;white, the weakest
+ beq enemyDead
+ dec drawColour		;decrement enemy colour
+ lda #enemy_sprite	
+ jsr drawToPlayfield	;draw enemy to playfield
+ lda #200				;player hits an enemy
+ jsr SOUNDONLOW
+ rts
+ 
+enemyDead:
+ lda #space_sprite
+ jsr drawToPlayfield	;draw spacea and erase enemy
+ lda #175				;different sound when enemy is dead
  jsr SOUNDONLOW
  rts
  
