@@ -47,7 +47,7 @@
  sta $900e		; set sound bits/turn on volume (see)
  jsr $ffbd 		;initialize clock
 
-
+;########################TITLE PAGE#######################
  lda #char_colour
  sta drawColour
 
@@ -126,6 +126,8 @@ incIndexLoop:
  bne incIndexLoop
  ldy Scratch
  rts 
+;#########################END TITLE PAGE########################## 
+
 gameLoopTop:
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
@@ -698,6 +700,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
 
 top:			; top of loop
  jsr isInvincible	;check if player still "injured"
+ jsr chktim
  lda #$00
  sta $900b			 ; store sound
  lda $9005			; load char memory
@@ -742,6 +745,8 @@ move:
  beq playup
  cmp #s			 ;s pressed
  beq playdown
+ cmp #atk
+ beq playattack
  rts
  
 playleft:
@@ -760,14 +765,43 @@ playdown:
  jsr down
  rts
 
-;These subroutines print the next letter of W,A,S,D (X,B,T,E) to make sure
-;that we aren't just seeing W,A,S,D being typed without the code
-;working.
-attack:
- lda #$87		 	; f# (175)
- sta $900b			 ; store sound
+playattack:
+ ;play sound
+ ;draw sword in direction
+ ;check for collision
+ ;play sound
+ ;lda #$af
+ lda #241
+ jsr SOUNDONLOW
  rts
 
+SOUNDONLOW:
+ sta $900a
+ rts
+
+SOUNDOFFLOW:
+ lda #0
+ sta $900a
+ rts
+ 
+SOUNDONHIGH:
+ sta $900c
+ rts
+ 
+SOUNDOFFHIGH:
+ lda #0
+ sta $900c
+ rts
+ 
+chktim:
+ jsr $ffde ;call timer
+ and #$0f
+ cmp #$0f
+ bpl chktimEnd
+ jsr SOUNDOFFLOW
+ jsr SOUNDOFFHIGH
+chktimEnd:
+ rts
 ;checks space you want to move into
 ;if there is something there, return 1 in y
 ;else, return 0 in y
@@ -906,6 +940,8 @@ checkInvincible:
  
 notInvincible:
  jsr loseLife
+ lda #135
+ jsr SOUNDONLOW
  lda #$06
  sta invinc_time
  lda #$02
