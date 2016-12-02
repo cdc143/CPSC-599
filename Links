@@ -11,12 +11,12 @@ To Do
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
 -get doors working again and random level changing/level changing for doors
--enemy lose health when hit by attack
 -subroutines/what to do with items
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
--Enemy health by colors //km -> Yes colours, TODO: enemies disappear
+-Enemy health by colors //KM -> DONE
+-enemy lose health when hit by attack //KM -> DONE
 -Swords and potions and and enemy damage (different color). //CD start on swords, portal and potion positioning
 -Moving floors (loop the code) - this works with portal animation, but just need to keep track of floor level
 -Difficulty settings
 -Custom character set //CD will work on designing some characters and creating some test code to print them
--Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete
+-Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete //KM -> IN PROCESS
