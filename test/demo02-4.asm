@@ -634,6 +634,8 @@ gameOver: ;
 ;TODO: Print "Game over"
  lda #$3e		 ; game over border/background colour blue/light blue
  sta $900f		 ; store in screen and border register
+ lda #135
+ jsr SOUNDONHIGH	;play "lose sound" 
  ;print game over to screen
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
@@ -641,6 +643,7 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  beq quitBounce
  cmp #f1 ;f1 to restart
  bne gameOverEnd
+ jsr SOUNDOFFHIGH	;turn sound off
  jmp titleScreen
 
 initEnemyLocation:
