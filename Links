@@ -10,6 +10,9 @@ To Do
 -Convert all levels to new level layout routine //CD (Done)
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
+-get doors working again and random level changing/level changing for doors
+-enemy lose health when hit by attack
+-subroutines/what to do with items
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors //km -> Yes colours, TODO: enemies disappear
 -Swords and potions and and enemy damage (different color). //CD start on swords, portal and potion positioning
