@@ -1079,7 +1079,7 @@ dropColl:
 loseLife:			;player dies
  lda #space_sprite
  ldx lives		;this
- ;jsr drawToScreen
+ ldy #$00
  jsr drawToStatus
  dec lives
  lda lives
