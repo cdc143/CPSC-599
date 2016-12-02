@@ -732,6 +732,7 @@ quit:
  brk			 ; quit
 
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
+;INPUT: accumulator: current key 
 move:
  cmp #f1 			;f1 to restart
  beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
@@ -749,32 +750,116 @@ move:
  beq playattack
  rts
  
+;INPUT: current direction pressed
 playleft:
+  sta prev_direction	;store for attack purposes
   jsr left		 ; subroutine to move left
   rts
-
+;INPUT: current direction pressed
 playright:
+ sta prev_direction
  jsr right		; subroutine to move right
  rts
-
+;INPUT: current direction pressed
 playup:
+ sta prev_direction
  jsr up
  rts
-
+;INPUT: current direction pressed
 playdown:
+ sta prev_direction
  jsr down
  rts
 
+;INPUT: none
+;overwrites accumulator, x, y registers
 playattack:
- ;play sound
+ ldx row
+ ldy col
  ;draw sword in direction
+ jsr attackDirection	;get player + direction they currently are in
+ jsr getFromScreen 		;get what is at that coordinate
+ ldx row				;need to reload x and y to potentially draw sword
+ ldy col
+ cmp #space_sprite		;nothing there
+ beq drawSwordAttack	;draw sword to screen
+ ;draw sword
+ cmp #enemy_sprite		;hit enemy
+ beq hitEnemy
+ ;draw sword and decrease enemy health
  ;check for collision
  ;play sound
- ;lda #$af
- lda #241
+ rts
+ 
+;INPUT: X - x directoin
+;		Y - y direction
+;TODO: remove sword from screen after time
+;different attack directions depending on attack direction
+drawSwordAttack:
+ jsr attackDirection	;get player + direction moved
+ lda prev_direction
+ cmp #w
+ beq swordW
+ cmp #a
+ beq swordA
+ cmp #s
+ beq swordS
+ cmp #d
+ beq swordD
+swordW:
+ lda #0
+ jmp drawSwordAttack2
+swordA:
+ lda #1
+ jmp drawSwordAttack2
+swordS:
+ lda #2
+ jmp drawSwordAttack2
+swordD:
+ lda #3
+drawSwordAttack2:
+ jsr drawToPlayfield	;draw to screen
+ lda #241				;play sword sound
  jsr SOUNDONLOW
  rts
-
+ 
+hitEnemy:				
+ lda #175				;different sound if player hits an enemy
+ jsr SOUNDONLOW
+ rts
+ 
+;INPUT: X - x direction
+;		Y - y direction
+;Does not overwrite x and y
+attackDirection:
+ lda prev_direction
+ cmp #w
+ beq atkw
+ cmp #a
+ beq atka
+ cmp #s
+ beq atks
+ cmp #d
+ beq atkd
+ rts
+ 
+atkw:
+ dey
+ rts
+ 
+atka:
+ dex 
+ rts
+ 
+atks:
+ iny
+ rts
+ 
+atkd:
+ inx
+ rts
+ 
+;INPUT: accumulator - note to play
 SOUNDONLOW:
  sta $900a
  rts
@@ -784,6 +869,7 @@ SOUNDOFFLOW:
  sta $900a
  rts
  
+;INPUT: accumulator - note to play
 SOUNDONHIGH:
  sta $900c
  rts
@@ -793,6 +879,7 @@ SOUNDOFFHIGH:
  sta $900c
  rts
  
+;INPUT: none
 chktim:
  jsr $ffde ;call timer
  and #$0f
@@ -1111,6 +1198,7 @@ invinc_time:		dc.b 0
 init_lives:				dc.b #$08
 lives:					dc.b 0
 current_key:			dc.b 0
+prev_direction:			dc.b 0
 inventory:				dc.b 0
 pi_weapon:			dc.b #94
 temp_colour:			dc.b 0
