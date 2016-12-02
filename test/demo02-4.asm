@@ -639,8 +639,7 @@ gameOver: ;
  lda #$3e		 ; game over border/background colour blue/light blue
  sta $900f		 ; store in screen and border register
  lda #135
- jsr SOUNDONHIGH	;play "lose sound" 
- ;print game over to screen
+ jsr SOUNDONHIGH	;play "lose sound"
 gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  lda $00c5		 ; current key held down -> page 179 of vic20 manual
  cmp #f5 ;quit
@@ -1025,6 +1024,8 @@ wallColl:
  sta cur_char_col
  lda #$00
  sta invinc_time
+ lda #140				;play sword sound
+ jsr SOUNDONHIGH
  lda #$01		;for no move function
  rts
 
@@ -1249,5 +1250,3 @@ titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
 titleAuthorsEnd
-gameOverMessage: dc.b #07, #01, #13, #05, #32, #15, #22, #05, #18
-gameOverMessageEnd 
