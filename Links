@@ -25,3 +25,4 @@ LM - add mod
   - update code that was protecting Y from the evil draw methods killing Y
   - try timer stuff (is high byte of timer 4.2 ish seconds? (256 jiffies))
     - if timer is successful add new time based movement code to game loop
+  - change portal method to choose one room (mod 8 + 1) that is not the room the player starts in
