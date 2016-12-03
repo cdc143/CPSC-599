@@ -6,7 +6,7 @@ To Do
 
 (3x3 8 layouts) //CD (Done)
 -Game loop
--Convert all drawing and collision routines     // LM partial work started in my local files, needs a game loop to work properly
+-Convert all drawing and collision routines     // LM partial work started in my local files, needs a game loop to work properly KM -> did basic collision stuff but can overwrite it, see demo02-4
 -Convert all levels to new level layout routine //CD (Done)
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
