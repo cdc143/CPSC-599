@@ -128,10 +128,14 @@ incIndexLoop:
  rts 
 ;#########################END TITLE PAGE########################## 
 
-
 gameLoopTop:
  lda #$00
  sta prev_note
+ ;lda #$2f
+ ;lda #$00
+ lda #48
+ sta score_ones
+ sta score_tens
  lda #$5f		; arbitrary number for timer
  jsr timerLoop
  ;Setup new location for characters
@@ -141,7 +145,7 @@ gameLoopTop:
  lda #screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
 
- ;jsr genRoom
+ ;jsr genRoom		;these have been moved to initCharsNextLevel
  ;jsr initPRowAddr
  ;jsr initRoomAddr
  ;jsr loadLevel
@@ -388,6 +392,17 @@ drawToStatusBot:
  sta status_colour_bot,y		; put the colour on the screen
  rts
 
+drawScore:
+ lda #char_colour
+ sta drawColour
+ lda score_tens
+ ldx #$14
+ ldy #$00
+ jsr drawToStatus
+ ldx #$15
+ lda score_ones
+ jsr drawToStatus
+ rts
 ;##########                                                GET FROM SCREEN                                                ##########
 ;				used to get the character on the playfield from and X, Y location
 ;				Takes 2 inputs returns a character in the Accumulator
@@ -681,6 +696,7 @@ initChars:
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ jsr drawScore
  jsr genRoom
  jsr initPRowAddr
  jsr initRoomAddr
@@ -1087,6 +1103,8 @@ dropColl:
  rts
 ;portal animation
 portalColl:
+portalSound:
+ jsr increaseScore
  lda #175
  jsr SOUNDONMID
  jsr $e55f
@@ -1192,7 +1210,20 @@ playNoteB:
  rts
 musicEnd:
  rts
- 
+
+increaseScore:
+ lda score_ones
+ cmp #57
+ bne incOnes
+ inc score_tens
+ lda #48
+ sta score_ones
+ jsr drawScore
+ jmp portalSound
+incOnes:
+ inc score_ones
+ jsr drawScore
+ rts 
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -1290,6 +1321,9 @@ lives:					dc.b 0
 current_key:			dc.b 0
 prev_direction:			dc.b 0
 inventory:				dc.b 0
+score_ones:					dc.b 0
+score_tens:					dc.b 0
+score_init:				dc.b #$30	;#48 ; 0 
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
 temp_colour:			dc.b 0
