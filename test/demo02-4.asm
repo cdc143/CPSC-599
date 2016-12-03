@@ -128,6 +128,7 @@ incIndexLoop:
  rts 
 ;#########################END TITLE PAGE########################## 
 
+
 gameLoopTop:
  lda #$00
  sta prev_note
@@ -140,10 +141,10 @@ gameLoopTop:
  lda #screen_colour		 ; 0f ->this makes a green border and black background
  sta $900f		 		; store in screen and border register
 
- jsr genRoom
- jsr initPRowAddr
- jsr initRoomAddr
- jsr loadLevel
+ ;jsr genRoom
+ ;jsr initPRowAddr
+ ;jsr initRoomAddr
+ ;jsr loadLevel
  ldx init_lives
  stx lives
  jmp initChars
@@ -674,15 +675,16 @@ initEnemyLocation:
 quitBounce:
    jmp quit
 
-gameOverEndBounce:
- jmp gameOverEnd
-
 initChars:
  lda #$01
  sta row		; row
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ jsr genRoom
+ jsr initPRowAddr
+ jsr initRoomAddr
+ jsr loadLevel
 ;player -> this assumes that it is done before this subroutine is done.
  ldx lives	;load index of where to draw lives to screen
 ;these lines are here so that they refresh the screen every time
@@ -761,7 +763,9 @@ move:
  cmp #atk
  beq playattack
  rts
- 
+gameOverEndBounce:
+ jmp gameOverEnd
+
 ;INPUT: current direction pressed
 playleft:
   sta prev_direction	;store for attack purposes
@@ -1051,9 +1055,7 @@ wallColl:
  lda #$01		;for no move function
  rts
 
-;portal animation
-portalColl:
- jmp portalAnimation
+					;TODO: not completely reset game (like switching rooms)
  
 ;crash into enemy: change player colour lose life if not invincible
 enemyColl:
@@ -1062,6 +1064,47 @@ enemyColl:
  jsr checkInvincible
  lda #$01		;no move
  rts
+
+  
+;TODO: DOOR COLLISION
+doorColl:
+ ;INSERT CODE HERE
+ ;
+ ;
+ ;
+ ;
+ lda #$00
+ rts
+ 
+dropColl:
+ lda #$03	;indicate picked up a drop
+ ;TODO: subroutine to decide what to do with drop
+ ;
+ ;
+ ;
+ ;
+ lda #$00	;move over drop
+ rts
+;portal animation
+portalColl:
+ lda #175
+ jsr SOUNDONMID
+ jsr $e55f
+ lda #screen_colour
+ sta temp_colour
+ ldx #$08				;number of iterations
+portalAnimTop:
+ lda temp_colour
+ sta $900f		 		; store in screen and border register
+ adc #$33				;add random number to change colour
+ sta temp_colour
+ jsr drawTimer
+ dex
+ cpx #$00
+ bne portalAnimTop
+ jsr SOUNDOFFMID
+; jmp gameLoopTop		;note: this currently resets game.
+ jmp initCharsNextLevel
  
 ;check if invincible 
 checkInvincible:
@@ -1105,26 +1148,6 @@ stillInvincible:
 invinRet:
  rts
  
-;TODO: DOOR COLLISION
-doorColl:
- ;INSERT CODE HERE
- ;
- ;
- ;
- ;
- lda #$00
- rts
- 
-dropColl:
- lda #$03	;indicate picked up a drop
- ;TODO: subroutine to decide what to do with drop
- ;
- ;
- ;
- ;
- lda #$00	;move over drop
- rts
- 
 ;ARGUMENTS: Scratch: damage given to enemy
 loseLife:			
  lda #space_sprite
@@ -1135,7 +1158,7 @@ loseLife:
  dec Scratch		;Scratch used to loop until done giving damage
  lda Scratch
  cmp #$00
- bpl loseLife
+ bpl loseLife		;loop until Scratch = 0
  lda lives					
  cmp #$00			;check if player out of lives
  bpl loseLifeNext	;still alive
@@ -1143,25 +1166,14 @@ loseLife:
 loseLifeNext:
  rts
 
-portalAnimation:
- jsr $e55f
- lda #screen_colour
- sta temp_colour
- ldx #$08				;number of iterations
-portalAnimTop:
- lda temp_colour
- sta $900f		 		; store in screen and border register
- adc #$33				;add random number to change colour
- sta temp_colour
- jsr drawTimer
- dex
- cpx #$00
- bne portalAnimTop
- jmp gameLoopTop		;note: this currently resets game.
-					;TODO: not completely reset game (like switching rooms)
-
+;This doesn't work yet
 playMusic: 
+ jsr playNoteA
+ rts
  jsr $ffde
+ cmp #$00
+ beq playNoteA
+ rts
  cmp prev_note
  bne musicEnd
  sta prev_note
@@ -1171,7 +1183,7 @@ playMusic:
  bne playNoteA
 
 playNoteA:
- lda #220
+ lda #180
  jsr SOUNDONMID
  rts
 playNoteB:
