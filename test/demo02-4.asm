@@ -58,6 +58,8 @@ titleScreen:
  lda #char_colour		;temporary colour start
  sta drawColour
  sta $900f
+ lda #160
+ jsr SOUNDONMID
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
@@ -93,17 +95,15 @@ drawAuthorLoop:
  lda row
  cmp #$00
  bpl drawAuthorLoop
- lda temp_colour
- sta $900f		 		; store in screen and border register
+ ;lda temp_colour
+ ;sta $900f		 		; store in screen and border register
+ lda #$00
+ sta Scratch
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
- jsr $ffde 		;read clock
- cmp #$01
- bne titleInput
- sec	;set carry bit
- dec drawColour	;random colour, pretty much
- lda drawColour
- sta $900f		 		; store in screen and border register
-
+ jsr playTheme
+ jsr scrColTheme
+ ;jsr playTheme
+ 
 titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
@@ -116,6 +116,34 @@ titleInput:
  jsr $e55f
  brk
 
+scrColTheme:
+ jsr $ffde 		;read clock
+ cmp #$01
+ bne titleInput
+ sec	;set carry bit
+ dec drawColour	;random colour, pretty much
+ lda drawColour
+ sta $900f		 		; store in screen and border register
+ rts
+ 
+playTheme:
+ jsr $ffde
+ and #$07	;can mess around with this bitmask to change time
+ cmp #$00	;can mess around with this to also change time
+ bne playThemeEnd	;can also mess around with this
+ ;jsr SOUNDOFFMID
+ ldx Scratch	;use Scratch because it isn't being used for anything else
+ lda theme,x	;load theme
+ jsr SOUNDONMID	;load to sound
+ inc Scratch
+ lda Scratch
+ cmp #themeEnd-theme	;check bounds
+ bne playThemeEnd
+ lda #$00	;reset index
+ sta Scratch
+playThemeEnd:
+ rts
+ 
 incIndex:
  sty Scratch
  ldy Scratch2
@@ -1395,3 +1423,5 @@ titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
 titleAuthorsEnd
+theme:		dc.b #165, #180, #131, #158, #185, #145	;these are completely random, so please change if desired!
+themeEnd
