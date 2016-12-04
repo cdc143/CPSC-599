@@ -58,8 +58,6 @@ titleScreen:
  lda #char_colour		;temporary colour start
  sta drawColour
  sta $900f
- lda #160
- jsr SOUNDONMID
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
@@ -95,15 +93,17 @@ drawAuthorLoop:
  lda row
  cmp #$00
  bpl drawAuthorLoop
- ;lda temp_colour
- ;sta $900f		 		; store in screen and border register
- lda #$00
- sta Scratch
+ lda temp_colour
+ sta $900f		 		; store in screen and border register
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
- jsr playTheme
- jsr scrColTheme
- ;jsr playTheme
- 
+ jsr $ffde 		;read clock
+ cmp #$01
+ bne titleInput
+ sec	;set carry bit
+ dec drawColour	;random colour, pretty much
+ lda drawColour
+ sta $900f		 		; store in screen and border register
+
 titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
@@ -116,34 +116,6 @@ titleInput:
  jsr $e55f
  brk
 
-scrColTheme:
- jsr $ffde 		;read clock
- cmp #$01
- bne titleInput
- sec	;set carry bit
- dec drawColour	;random colour, pretty much
- lda drawColour
- sta $900f		 		; store in screen and border register
- rts
- 
-playTheme:
- jsr $ffde
- and #$07	;can mess around with this bitmask to change time
- cmp #$00	;can mess around with this to also change time
- bne playThemeEnd	;can also mess around with this
- ;jsr SOUNDOFFMID
- ldx Scratch	;use Scratch because it isn't being used for anything else
- lda theme,x	;load theme
- jsr SOUNDONMID	;load to sound
- inc Scratch
- lda Scratch
- cmp #themeEnd-theme	;check bounds
- bne playThemeEnd
- lda #$00	;reset index
- sta Scratch
-playThemeEnd:
- rts
- 
 incIndex:
  sty Scratch
  ldy Scratch2
@@ -177,7 +149,7 @@ gameLoopTop:
  ;jsr initPRowAddr
  ;jsr initRoomAddr
  ;jsr loadLevel
- ldx #init_lives
+ ldx init_lives
  stx lives
  jmp initChars
 
@@ -366,6 +338,7 @@ modEnd:
 											; Y register = the Y coordinate for the object to be drawn at (0-19)
 											; drawColour = the colour you want the character to be drawn in
 drawToPlayfield:
+ sty drawY
  sta drawChar					; store the Character to draw
  cpy #$0a
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
@@ -374,6 +347,7 @@ drawToPlayfield:
  sta graphics_top,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_top,y	; put the colour on the screen
+ ldy drawY
  rts
 
 drawToPlayfieldBot:
@@ -386,6 +360,7 @@ drawToPlayfieldBot:
  sta graphics_bot,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_bot,y	; put the colour on the screen
+ ldy drawY
  rts
 
  ; multiplies Y by 22 and adds X to it returns the answer in the Y register
@@ -421,12 +396,14 @@ drawToStatus:
  rts
 
 drawToStatusBot:
+ sty drawY
  dey
  jsr drawMath
  lda drawChar					; get the character back
  sta status_loc_bot,y			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_bot,y		; put the colour on the screen
+ ldy drawY
  rts
 
 drawScore:
@@ -440,6 +417,7 @@ drawScore:
  lda score_ones
  jsr drawToStatus
  rts
+ 
 ;##########                                                GET FROM SCREEN                                                ##########
 ;				used to get the character on the playfield from and X, Y location
 ;				Takes 2 inputs returns a character in the Accumulator
@@ -447,13 +425,13 @@ drawScore:
 ;								Y register = Y location
 getFromScreen:
  cpy #$0a
- sty temp1
+ sty drawY
  BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda char_colour_loc_top,y
  sta drawColour
  lda graphics_top,y				; get the character back from the screen
- ldy temp1
+ ldy drawY
  rts
 
 getFromScreenBot:
@@ -465,7 +443,7 @@ getFromScreenBot:
  lda char_colour_loc_bot,y
  sta drawColour
  lda graphics_bot,y				; get the character back from the screen
- ldy temp1
+ ldy drawY
  rts
 
 ;########################## LEVEL LOADING CODE ################################
@@ -1041,7 +1019,7 @@ chktimEnd:
 ;else, return 0 in y
 left:
  lda #space_sprite
- cpx #row_begin				; check if end of screen on left
+ cpx row_begin				; check if end of screen on left
  beq moveEnd
  jsr drawToPlayfield	;removes previous location
  dec row				; rows -1
@@ -1067,7 +1045,7 @@ right:			;similar as above left subroutine
 
 up:
  lda #space_sprite
- cpy #col_begin
+ cpy col_begin
  beq moveEnd
  jsr drawToPlayfield
  dec col 			 ; cols -1
@@ -1083,7 +1061,7 @@ up:
 
 down:
  lda #space_sprite
- cpy #col_end
+ cpy col_end
  beq moveEnd
  jsr drawToPlayfield
  inc col 		 ; cols + 1
@@ -1325,12 +1303,12 @@ timer:
 
 loadNewLevel:
   lda col
-  cmp #row_newLevel_begin		;checking top
+  cmp row_newLevel_begin		;checking top
   bne checkright
   inc current_room
   inc current_room
   inc current_room
-  lda #col_newLevel_end
+  lda col_newLevel_end
   sta col
   dec col
   jsr loadLevel
@@ -1340,19 +1318,19 @@ checkright:
   cmp #row_end
   bne checkbottom
   inc current_room
-  lda #row_newLevel_begin
+  lda row_newLevel_begin
   sta row
   inc row
   jsr loadLevel
   rts
 checkbottom:
   lda col
-  cmp #col_newLevel_end
+  cmp col_newLevel_end
   bne checkLeft
   dec current_room
   dec current_room
   dec current_room
-  lda #col_begin
+  lda col_begin
   sta col
   inc col
   inc col
@@ -1360,7 +1338,7 @@ checkbottom:
   rts
 checkLeft:
   lda row
-  cmp #row_begin
+  cmp row_begin
   bne error
   dec current_room
   lda #row_end
@@ -1400,18 +1378,24 @@ prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 row:						dc.b 0
 col:						dc.b 0
 invinc_time:		dc.b 0
-;init_lives:				dc.b #$08
+init_lives:				dc.b #$08
 lives:					dc.b 0
 current_key:			dc.b 0
 prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
+score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
 temp_colour:			dc.b 0
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
+row_begin:			dc.b #$00
+row_newLevel_begin: dc.b #$01
+col_newLevel_end:   dc.b #$14
+col_begin:				dc.b #$00
+col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
@@ -1425,12 +1409,15 @@ enemyLoopCount: dc.b 0
 divisor					dc.b 0
 
 ;drawToPlayfield vars
-drawChar:				dc.b 0
-drawColour:			dc.b 0
+drawChar:				dc.b 0		; used to tell the draw method what you want to draw
+drawColour:			dc.b 0		; used to tell the draw method what colour to draw the object
+drawY:       		 	dc.b 0		; used to store the Y coordinate for safe keeping to return to the calling method
 
+; scratch memory, if you use these make sure you are ok with losing them if you call another method
 Scratch:				dc.b 0
 Scratch2:				dc.b 0
-Ycoor:        dc.b #$00
+
+Ycoor: 		 dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
 temp1:        dc.b 0
@@ -1438,5 +1425,3 @@ titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
 titleAuthorsEnd
-theme:		dc.b #165, #180, #131, #158, #185, #145	;these are completely random, so please change if desired!
-themeEnd
