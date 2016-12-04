@@ -21,7 +21,7 @@ To Do
 -Custom character set //CD will work on designing some characters and creating some test code to print them
 -Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete //KM -> IN PROCESS
 
-LM - add mod    // LM done, untested feel free to let me know if its busted
+  - add mod    // LM done, untested feel free to let me know if its busted
   - update code that was protecting Y from the evil draw methods killing Y
   - try timer stuff (is high byte of timer 4.2 ish seconds? (256 jiffies))
     - if timer is successful add new time based movement code to game loop
