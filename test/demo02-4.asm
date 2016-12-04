@@ -57,7 +57,7 @@ titleScreen:
  jsr $e55f		;clear screen
  lda #char_colour		;temporary colour start
  sta drawColour
- sta $900f
+ ;sta $900f
  lda #160
  jsr SOUNDONMID
  ;jsr levLoadMain 	;load level 3 to screen
@@ -95,10 +95,10 @@ drawAuthorLoop:
  lda row
  cmp #$00
  bpl drawAuthorLoop
- ;lda temp_colour
- ;sta $900f		 		; store in screen and border register
+ lda temp_colour
+ sta $900f		 		; store in screen and border register
  lda #$00
- sta Scratch
+ sta Scratch	
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr playTheme
  jsr scrColTheme
@@ -177,6 +177,7 @@ gameLoopTop:
  ;jsr initPRowAddr
  ;jsr initRoomAddr
  ;jsr loadLevel
+ jsr SOUNDOFFMID
  ldx #init_lives
  stx lives
  jmp initChars
@@ -732,6 +733,8 @@ initChars:
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ ;lda #$00
+ ;sta Scratch
  jsr drawScore
  jsr genRoom
  jsr initPRowAddr
@@ -762,11 +765,9 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  sta $9005		; store in char memory
 
 top:			; top of loop
+ ;jsr playTheme	;this isn't really working atm
  jsr isInvincible	;check if player still "injured"
- jsr playMusic
  jsr chktim
- lda #$00
- sta $900b			 ; store sound
  lda $9005			; load char memory
  pha				; push to stack
  lda $00c5		 	; current key held down -> page 179 of vic20 manual
@@ -1173,7 +1174,7 @@ portalColl:
 portalSound:
  jsr increaseScore
  lda #175
- jsr SOUNDONMID
+ jsr SOUNDONHIGH
  jsr $e55f
  lda #screen_colour
  sta temp_colour
@@ -1249,33 +1250,6 @@ loseLife:
  bpl loseLifeNext	;still alive
  jmp gameOver		;rip
 loseLifeNext:
- rts
-
-;This doesn't work yet
-playMusic:
- jsr playNoteA
- rts
- jsr $ffde
- cmp #$00
- beq playNoteA
- rts
- cmp prev_note
- bne musicEnd
- sta prev_note
- and #$01
- cmp #$00
- beq playNoteB
- bne playNoteA
-
-playNoteA:
- lda #180
- jsr SOUNDONMID
- rts
-playNoteB:
- lda #240
- jsr SOUNDONMID
- rts
-musicEnd:
  rts
 
 increaseScore:
@@ -1392,7 +1366,7 @@ score_ones:					dc.b 0
 score_tens:					dc.b 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
-temp_colour:			dc.b 0
+temp_colour:			dc.b #$08
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
 seed:					dc.b 0 ;store seed for rand number
