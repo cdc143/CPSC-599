@@ -332,6 +332,23 @@ initPRowAddr:
   sta prow_addr,x
   rts
 
+ ; mod function
+ ; input is X(register) mod Y(register)
+ ; output is returned in the Accumulator
+mod:
+ txa					; put the dividend in the Accumulator
+ sty divisor		; store the divisor in a variable since you can't subtract y from a
+ cmp divisor		; check to see if the dividend is less than the divisor
+ bmi modEnd		; already have the answer, return it
+modLoop:
+ sec					; set the carry for math
+ sbc divisor		; subtract the divisor from the dividend
+ cmp divisor		; check to see if the remainder is less than the divisor
+ bpl modLoop		; if it isnt then subtract again, else return answer
+modEnd:
+ rts
+ 
+ 
  ;######################### END INIT AND UTILITY METHODS #######################
 
 
@@ -1404,9 +1421,13 @@ enemyypos: dc.b 0,0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
 
+;mod vars
+divisor					dc.b 0
+
 ;drawToPlayfield vars
 drawChar:				dc.b 0
 drawColour:			dc.b 0
+
 Scratch:				dc.b 0
 Scratch2:				dc.b 0
 Ycoor:        dc.b #$00
