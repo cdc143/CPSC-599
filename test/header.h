@@ -15,6 +15,7 @@ p1_sprite = #81 ;81 = circle
 lives_sprite = #83		;heart
 enemy_sprite = #87		;circle
 door_sprite = $5b
+sword_sprite = $58
 w = #9
 a = #17
 s = #41

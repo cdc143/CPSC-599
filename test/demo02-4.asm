@@ -116,7 +116,7 @@ titleInput:
  jsr $e55f
  brk
 
- 
+
 scrColTheme:
  jsr $ffde 		;read clock
  cmp #$01
@@ -126,7 +126,7 @@ scrColTheme:
  lda drawColour
  sta $900f		 		; store in screen and border register
  rts
- 
+
 playTheme:
  jsr $ffde
  and #$07	;can mess around with this bitmask to change time
@@ -144,7 +144,7 @@ playTheme:
  sta Scratch
 playThemeEnd:
  rts
- 
+
 incIndex:
  sty Scratch
  ldy Scratch2
@@ -349,8 +349,8 @@ modLoop:
  bpl modLoop		; if it isnt then subtract again, else return answer
 modEnd:
  rts
- 
- 
+
+
  ;######################### END INIT AND UTILITY METHODS #######################
 
 
@@ -448,7 +448,7 @@ drawScore:
  lda score_ones
  jsr drawToStatus
  rts
- 
+
 ;##########                                                GET FROM SCREEN                                                ##########
 ;				used to get the character on the playfield from and X, Y location
 ;				Takes 2 inputs returns a character in the Accumulator
@@ -616,12 +616,10 @@ putLeftDoor:
   jsr drawToPlayfield
   rts
 putPortal:
-  pha
   ldy #$0a
   ldx #$0b
-  lda #$7f
+  lda #portal_sprite
   jsr drawToPlayfield
-  pla
   rts
 putDrops: ;Randomly decide if portal, potion or sword or none
 dropLoop:
@@ -631,43 +629,37 @@ dropLoop:
   jsr getRandom
   and #$0f
   tax
-  ;jsr getFromScreen
-  ;cmp #$20
-  ;bne dropLoop
+  jsr getFromScreen
+  cmp #space_sprite
+  bne dropLoop
   jsr getRandom
-  and #$0f
-  cmp #$00
-  bne drop1
+  cmp #$20
+  bcc drop1
+  cmp #$c8
+  bcs drop2
+  cmp #$39
+  bne dropEnd
   jsr putPortal
   rts
 drop1:
-  cmp #$01
-  bne drop2
   jsr putSword
   rts
 drop2:
-  cmp #$02
-  bne dropEnd
   jsr putPotion
+  rts
 dropEnd:
   rts
 
 putSword: ;Assumes x coordinate and y coordinate to draw will be passed in
-  pha
-  lda #$58
-  ldy #$03
-  ldx #$02
+  lda #sword_sprite
   jsr drawToPlayfield
-  pla
   rts
 
 putPotion: ;Assumes x coordinate and y coordinate to draw will be passed in
-  pha
-  lda #$5a
-  ldy #$03
-  ldx #$01
+  lda life_colour
+  sta drawColour
+  lda #lives_sprite
   jsr drawToPlayfield
-  pla
   rts
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
@@ -692,10 +684,10 @@ drawPRowLoop:
 ;############################# END OF LEVEL LOADING CODE ######################
 
 drawLives:		;draw lives to screen
- lda #lives_sprite
- sta status_loc_top,x
  lda #life_colour
- sta status_colour_top,x
+ sta drawColour
+ lda #lives_sprite
+ jsr drawToStatus
  dex
  cpx #$00
  bne drawLives

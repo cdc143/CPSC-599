@@ -15,7 +15,13 @@ To Do
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors //KM -> DONE
 -enemy lose health when hit by attack //KM -> DONE
--Swords and potions and and enemy damage (different color). //CD start on swords, portal and potion positioning. Portals and potions are straightforward, swords shouldn’t be too bad, just need to swap sprites or do some sort of animation when attacking
+-Swords and potions and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now
+
+Odds: (Feel free to change or comment on these)
+Sword: 1/8
+Potion 1/5
+Portal 1/255 (additional portal in room 8)
+
 -Moving floors (loop the code) - this works with portal animation, but just need to keep track of floor level
 -Difficulty settings
 -Custom character set //CD will work on designing some characters and creating some test code to print them
