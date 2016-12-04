@@ -177,7 +177,7 @@ gameLoopTop:
  ;jsr initPRowAddr
  ;jsr initRoomAddr
  ;jsr loadLevel
- ldx init_lives
+ ldx #init_lives
  stx lives
  jmp initChars
 
@@ -1024,7 +1024,7 @@ chktimEnd:
 ;else, return 0 in y
 left:
  lda #space_sprite
- cpx row_begin				; check if end of screen on left
+ cpx #row_begin				; check if end of screen on left
  beq moveEnd
  jsr drawToPlayfield	;removes previous location
  dec row				; rows -1
@@ -1050,7 +1050,7 @@ right:			;similar as above left subroutine
 
 up:
  lda #space_sprite
- cpy col_begin
+ cpy #col_begin
  beq moveEnd
  jsr drawToPlayfield
  dec col 			 ; cols -1
@@ -1066,7 +1066,7 @@ up:
 
 down:
  lda #space_sprite
- cpy col_end
+ cpy #col_end
  beq moveEnd
  jsr drawToPlayfield
  inc col 		 ; cols + 1
@@ -1308,12 +1308,12 @@ timer:
 
 loadNewLevel:
   lda col
-  cmp row_newLevel_begin		;checking top
+  cmp #row_newLevel_begin		;checking top
   bne checkright
   inc current_room
   inc current_room
   inc current_room
-  lda col_newLevel_end
+  lda #col_newLevel_end
   sta col
   dec col
   jsr loadLevel
@@ -1323,19 +1323,19 @@ checkright:
   cmp #row_end
   bne checkbottom
   inc current_room
-  lda row_newLevel_begin
+  lda #row_newLevel_begin
   sta row
   inc row
   jsr loadLevel
   rts
 checkbottom:
   lda col
-  cmp col_newLevel_end
+  cmp #col_newLevel_end
   bne checkLeft
   dec current_room
   dec current_room
   dec current_room
-  lda col_begin
+  lda #col_begin
   sta col
   inc col
   inc col
@@ -1343,7 +1343,7 @@ checkbottom:
   rts
 checkLeft:
   lda row
-  cmp row_begin
+  cmp #row_begin
   bne error
   dec current_room
   lda #row_end
@@ -1383,24 +1383,18 @@ prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 row:						dc.b 0
 col:						dc.b 0
 invinc_time:		dc.b 0
-init_lives:				dc.b #$08
+;init_lives:				dc.b #$08
 lives:					dc.b 0
 current_key:			dc.b 0
 prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
-score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
 temp_colour:			dc.b 0
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
-row_begin:			dc.b #$00
-row_newLevel_begin: dc.b #$01
-col_newLevel_end:   dc.b #$14
-col_begin:				dc.b #$00
-col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
