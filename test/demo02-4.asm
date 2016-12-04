@@ -98,12 +98,12 @@ drawAuthorLoop:
  lda temp_colour
  sta $900f		 		; store in screen and border register
  lda #$00
- sta Scratch	
+ sta Scratch
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr playTheme
  jsr scrColTheme
  ;jsr playTheme
- 
+
 titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
@@ -116,6 +116,7 @@ titleInput:
  jsr $e55f
  brk
 
+ 
 scrColTheme:
  jsr $ffde 		;read clock
  cmp #$01
@@ -333,6 +334,23 @@ initPRowAddr:
   sta prow_addr,x
   rts
 
+ ; mod function
+ ; input is X(register) mod Y(register)
+ ; output is returned in the Accumulator
+mod:
+ txa					; put the dividend in the Accumulator
+ sty divisor		; store the divisor in a variable since you can't subtract y from a
+ cmp divisor		; check to see if the dividend is less than the divisor
+ bmi modEnd		; already have the answer, return it
+modLoop:
+ sec					; set the carry for math
+ sbc divisor		; subtract the divisor from the dividend
+ cmp divisor		; check to see if the remainder is less than the divisor
+ bpl modLoop		; if it isnt then subtract again, else return answer
+modEnd:
+ rts
+ 
+ 
  ;######################### END INIT AND UTILITY METHODS #######################
 
 
@@ -350,14 +368,16 @@ initPRowAddr:
 											; Y register = the Y coordinate for the object to be drawn at (0-19)
 											; drawColour = the colour you want the character to be drawn in
 drawToPlayfield:
+ sty drawY
  sta drawChar					; store the Character to draw
  cpy #$0a
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
- lda drawChar					; get the character back
- sta graphics_top,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_top,y	; put the colour on the screen
+ lda drawChar					; get the character back
+ sta graphics_top,y				; draw it to the screen
+ ldy drawY
  rts
 
 drawToPlayfieldBot:
@@ -366,10 +386,11 @@ drawToPlayfieldBot:
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
- lda drawChar					; get the character back
- sta graphics_bot,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_bot,y	; put the colour on the screen
+ lda drawChar					; get the character back
+ sta graphics_bot,y				; draw it to the screen
+ ldy drawY
  rts
 
  ; multiplies Y by 22 and adds X to it returns the answer in the Y register
@@ -399,18 +420,21 @@ drawToStatus:
  sta drawChar					; store the Character to draw
  cpy #$00
  BMI drawToStatusBot
- sta status_loc_top,x			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_top,x		; put the colour on the screen
+ lda drawChar					; get the character back
+ sta status_loc_top,x			; draw it to the screen
  rts
 
 drawToStatusBot:
+ sty drawY
  dey
  jsr drawMath
- lda drawChar					; get the character back
- sta status_loc_bot,y			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_bot,y		; put the colour on the screen
+ lda drawChar					; get the character back
+ sta status_loc_bot,y			; draw it to the screen
+ ldy drawY
  rts
 
 drawScore:
@@ -424,6 +448,7 @@ drawScore:
  lda score_ones
  jsr drawToStatus
  rts
+ 
 ;##########                                                GET FROM SCREEN                                                ##########
 ;				used to get the character on the playfield from and X, Y location
 ;				Takes 2 inputs returns a character in the Accumulator
@@ -431,13 +456,13 @@ drawScore:
 ;								Y register = Y location
 getFromScreen:
  cpy #$0a
- sty temp1
+ sty drawY
  BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda char_colour_loc_top,y
  sta drawColour
  lda graphics_top,y				; get the character back from the screen
- ldy temp1
+ ldy drawY
  rts
 
 getFromScreenBot:
@@ -449,7 +474,7 @@ getFromScreenBot:
  lda char_colour_loc_bot,y
  sta drawColour
  lda graphics_bot,y				; get the character back from the screen
- ldy temp1
+ ldy drawY
  rts
 
 ;########################## LEVEL LOADING CODE ################################
@@ -492,14 +517,14 @@ putDoors:
   lda #wall_colour
   sta drawColour
   lda current_room
-  sta $1000
+  ; sta $1000
   cmp #$00
   bne room1
   jsr putRightDoor
   jsr putTopDoor
   rts
 room1:
-  lda current_room
+  ; lda current_room
   cmp #$01
   bne room2
   jsr putTopDoor
@@ -507,14 +532,14 @@ room1:
   jsr putLeftDoor
   rts
 room2:
-  lda current_room
+  ; lda current_room
   cmp #$02
   bne room3
   jsr putTopDoor
   jsr putLeftDoor
   rts
 room3:
-  lda current_room
+  ; lda current_room
   cmp #$03
   bne room4
   jsr putBottomDoor
@@ -522,7 +547,7 @@ room3:
   jsr putTopDoor
   rts
 room4:
-  lda current_room
+  ; lda current_room
   cmp #$04
   bne room5
   jsr putLeftDoor
@@ -531,7 +556,7 @@ room4:
   jsr putBottomDoor
   rts
 room5:
-  lda current_room
+  ; lda current_room
   cmp #$05
   bne room6
   jsr putLeftDoor
@@ -539,14 +564,14 @@ room5:
   jsr putBottomDoor
   rts
 room6:
-  lda current_room
+  ; lda current_room
   cmp #$06
   bne room7
   jsr putBottomDoor
   jsr putRightDoor
   rts
 room7:
-  lda current_room
+  ; lda current_room
   cmp #$07
   bne room8
   jsr putLeftDoor
@@ -554,7 +579,7 @@ room7:
   jsr putRightDoor
   rts
 room8:
-  lda current_room
+  ; lda current_room
   cmp #$08
   bne roomError
   jsr putLeftDoor
@@ -733,8 +758,6 @@ initChars:
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
- ;lda #$00
- ;sta Scratch
  jsr drawScore
  jsr genRoom
  jsr initPRowAddr
@@ -1252,6 +1275,33 @@ loseLife:
 loseLifeNext:
  rts
 
+;This doesn't work yet
+; playMusic:
+ ; jsr playNoteA
+ ; rts
+ ; jsr $ffde
+ ; cmp #$00
+ ; beq playNoteA
+ ; rts
+ ; cmp prev_note
+ ; bne musicEnd
+ ; sta prev_note
+ ; and #$01
+ ; cmp #$00
+ ; beq playNoteB
+ ; bne playNoteA
+
+; playNoteA:
+ ; lda #180
+ ; jsr SOUNDONMID
+ ; rts
+; playNoteB:
+ ; lda #240
+ ; jsr SOUNDONMID
+ ; rts
+; musicEnd:
+ ; rts
+
 increaseScore:
  lda score_ones
  cmp #57
@@ -1357,18 +1407,24 @@ prow_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 row:						dc.b 0
 col:						dc.b 0
 invinc_time:		dc.b 0
-;init_lives:				dc.b #$08
+; init_lives:				dc.b #$08
 lives:					dc.b 0
 current_key:			dc.b 0
 prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
+; score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
 temp_colour:			dc.b #$08
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
+; row_begin:			dc.b #$00
+; row_newLevel_begin: dc.b #$01
+; col_newLevel_end:   dc.b #$14
+; col_begin:				dc.b #$00
+; col_end:				dc.b #$16
 seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
@@ -1378,12 +1434,19 @@ enemyypos: dc.b 0,0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
 
+;mod vars
+divisor					dc.b 0
+
 ;drawToPlayfield vars
-drawChar:				dc.b 0
-drawColour:			dc.b 0
+drawChar:				dc.b 0		; used to tell the draw method what you want to draw
+drawColour:			dc.b 0		; used to tell the draw method what colour to draw the object
+drawY:       		 	dc.b 0		; used to store the Y coordinate for safe keeping to return to the calling method
+
+; scratch memory, if you use these make sure you are ok with losing them if you call another method
 Scratch:				dc.b 0
 Scratch2:				dc.b 0
-Ycoor:        dc.b #$00
+
+Ycoor: 		 dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
 temp1:        dc.b 0
