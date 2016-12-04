@@ -343,10 +343,10 @@ drawToPlayfield:
  cpy #$0a
  BPL drawToPlayfieldBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
- lda drawChar					; get the character back
- sta graphics_top,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_top,y	; put the colour on the screen
+ lda drawChar					; get the character back
+ sta graphics_top,y				; draw it to the screen
  ldy drawY
  rts
 
@@ -356,10 +356,10 @@ drawToPlayfieldBot:
  sbc #$0a							; subtract 10
  tay									; put Y back
  jsr drawMath
- lda drawChar					; get the character back
- sta graphics_bot,y				; draw it to the screen
  lda drawColour					; get the colour for the character
  sta char_colour_loc_bot,y	; put the colour on the screen
+ lda drawChar					; get the character back
+ sta graphics_bot,y				; draw it to the screen
  ldy drawY
  rts
 
@@ -390,19 +390,20 @@ drawToStatus:
  sta drawChar					; store the Character to draw
  cpy #$00
  BMI drawToStatusBot
- sta status_loc_top,x			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_top,x		; put the colour on the screen
+ lda drawChar					; get the character back
+ sta status_loc_top,x			; draw it to the screen
  rts
 
 drawToStatusBot:
  sty drawY
  dey
  jsr drawMath
- lda drawChar					; get the character back
- sta status_loc_bot,y			; draw it to the screen
  lda drawColour					; get the colour for the character
  sta status_colour_bot,y		; put the colour on the screen
+ lda drawChar					; get the character back
+ sta status_loc_bot,y			; draw it to the screen
  ldy drawY
  rts
 
