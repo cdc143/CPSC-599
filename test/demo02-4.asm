@@ -61,7 +61,7 @@ titleScreen:
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
- lda #$09 
+ lda #$09
  sta Scratch2
  lda #$05			;screen coord for title; too lazy to use x,y coords
  sta col
@@ -81,7 +81,7 @@ drawTitleLoop:		;draw title to screen
  sta Scratch2
  lda #$06		;screen coord for author names
  sta col
- lda #titleAuthorsEnd-titleAuthors-1	
+ lda #titleAuthorsEnd-titleAuthors-1
  sta row
 drawAuthorLoop:
  ldx row
@@ -94,18 +94,18 @@ drawAuthorLoop:
  cmp #$00
  bpl drawAuthorLoop
  lda temp_colour
- sta $900f		 		; store in screen and border register  
+ sta $900f		 		; store in screen and border register
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr $ffde 		;read clock
- cmp #$01		
+ cmp #$01
  bne titleInput
  sec	;set carry bit
  dec drawColour	;random colour, pretty much
  lda drawColour
- sta $900f		 		; store in screen and border register  
- 
+ sta $900f		 		; store in screen and border register
+
 titleInput:
- lda $00c5			;check for start.  Only can press start right now. Probably should 
+ lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
  cmp #f3
  beq gameLoopTop
@@ -120,13 +120,13 @@ incIndex:
  sty Scratch
  ldy Scratch2
 incIndexLoop:
- inx 
+ inx
  dey
  cpy #$00
  bne incIndexLoop
  ldy Scratch
- rts 
-;#########################END TITLE PAGE########################## 
+ rts
+;#########################END TITLE PAGE##########################
 
 gameLoopTop:
  lda #$00
@@ -156,28 +156,20 @@ gameLoopTop:
  ;########################## METHODS TO INIT DATA AND UTILITY METHODS HERE #####
 
 getRandom:
- stx Scratch
- sty Scratch2
- jsr $ffde 	;call timer
- txa
- adc $9114
- adc $9004 
+ lda $9114
+ adc $9004
  sta seed
- ldx Scratch
- ldy Scratch2
  rts
 
 genRoom:
  ldy #$00
 genRoomLoop:
  jsr getRandom
- and #$03
+ and #$07
  sta rooms,y
  iny
  cpy #$09
  bne genRoomLoop
- lda #$07
- sta rooms
  rts
 
 initRoomAddr:
@@ -410,13 +402,15 @@ drawScore:
 ;								Y register = Y location
 getFromScreen:
  cpy #$0a
+ sty temp1
  BPL getFromScreenBot		; if the Y coordinate is in the bootom then go to that method (y >= 10)
  jsr drawMath
  lda char_colour_loc_top,y
  sta drawColour
  lda graphics_top,y				; get the character back from the screen
+ ldy temp1
  rts
- 
+
 getFromScreenBot:
  tya									; put Y in Accumulator
  sec
@@ -426,6 +420,7 @@ getFromScreenBot:
  lda char_colour_loc_bot,y
  sta drawColour
  lda graphics_bot,y				; get the character back from the screen
+ ldy temp1
  rts
 
 ;########################## LEVEL LOADING CODE ################################
@@ -669,24 +664,37 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  jmp titleScreen
 
 initEnemyLocation:
-  jsr getRandom
-  tax
-  lda graphics_top,x
-  cmp #space_sprite
-  bne initEnemyLocation
-  lda #enemy_sprite
-  sta graphics_top,x ;potential problem/not problem: enemies
-							;can only spawn 255 spaces past graphics_playfield_start
-  ;lda #char_colour
-  jsr getRandom	;just gets a random colour for now, change this when have more memory
-  and #$07
-  ;adc #$0b
-  ;and #$3c ;00111100
-  sta char_colour_loc_top,x
-  dey
-  cpy #$00
-  bne initEnemyLocation
-  rts
+ jsr getRandom	;just gets a random colour for now, change this when have more memory
+ and #$07
+ sta enemyCount
+ lda #$00
+ sta enemyLoopCount
+initEnemyLoop:
+ jsr getRandom
+ and #$0f
+ tax
+ jsr getRandom
+ and #$0f
+ tay
+ jsr getFromScreen
+ ;sta $1000
+ ;brk
+ cmp #$66
+
+ beq initEnemyLoop
+ txa
+ ldx enemyLoopCount
+ sta enemyxpos,x
+ sty enemyypos,x
+ tax
+ ;sta drawColour
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ inc enemyLoopCount
+ lda enemyLoopCount
+ cmp enemyCount
+ bne initEnemyLoop
+ rts
 quitBounce:
    jmp quit
 
@@ -746,8 +754,39 @@ top:			; top of loop
  jsr drawToPlayfield
  jsr drawTimer
 ;;--------------------End of drawing character to screen
+ ;lda enemyxpos
+ ;cmp row
+ ;beq checkColumn
+ ;bcc rowLess
+ ;Move left
+ ;If fail check Column
+ ;clc
+ ;bcc end
+rowLess:
+ ;Move right
+ ;If failure check Column
+ ;bpl end
+checkColumn:
+ ;lda enemyypos
+ ;cmp col
+ ;beq end
+ ;bcc columnLess
+ ;Move up
+ ;If fail don't move
 
+ ;clc
+ ;bcc end
+columnLess:
+  ;Move down
+  ;If fail, don't move
+end:
+ ;rts
 ;put enemy movement here
+
+; for each in enemy pos
+; update Position at x,y
+; load x and y
+; redraw enemy
 
 next:
   ;Wait for user to press enter, and restore the character set
@@ -762,7 +801,7 @@ quit:
  brk			 ; quit
 
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
-;INPUT: accumulator: current key 
+;INPUT: accumulator: current key
 move:
  cmp #f1 			;f1 to restart
  beq gameOverEndBounce	;bounce to game over to take us to gameLoopTop
@@ -822,7 +861,7 @@ playattack:
  ;check for collision
  ;play sound
  rts
- 
+
 ;INPUT: X - x directoin
 ;		Y - y direction
 ;TODO: remove sword from screen after time
@@ -854,27 +893,27 @@ drawSwordAttack2:
  lda #241				;play sword sound
  jsr SOUNDONLOW
  rts
- 
-hitEnemy:	
+
+hitEnemy:
  jsr attackDirection	;get location of enemy
- lda drawColour		
+ lda drawColour
  and #$07		;mask because drawColour returns values >8
  cmp #$01		;white, the weakest
  beq enemyDead
  dec drawColour		;decrement enemy colour
- lda #enemy_sprite	
+ lda #enemy_sprite
  jsr drawToPlayfield	;draw enemy to playfield
  lda #200				;player hits an enemy
  jsr SOUNDONLOW
  rts
- 
+
 enemyDead:
  lda #space_sprite
  jsr drawToPlayfield	;draw spacea and erase enemy
  lda #175				;different sound when enemy is dead
  jsr SOUNDONLOW
  rts
- 
+
 ;INPUT: X - x direction
 ;		Y - y direction
 ;Does not overwrite x and y
@@ -889,23 +928,23 @@ attackDirection:
  cmp #d
  beq atkd
  rts
- 
+
 atkw:
  dey
  rts
- 
+
 atka:
- dex 
+ dex
  rts
- 
+
 atks:
  iny
  rts
- 
+
 atkd:
  inx
  rts
- 
+
 ;INPUT: accumulator - note to play
 SOUNDONLOW:
  sta $900a
@@ -915,33 +954,33 @@ SOUNDOFFLOW:
  lda #0
  sta $900a
  rts
- 
+
 ;INPUT: accumulator - note to play
 SOUNDONHIGH:
  sta $900c
  rts
- 
+
 SOUNDOFFHIGH:
  lda #0
  sta $900c
  rts
- 
+
 SOUNDONMID:
  sta $900b
  rts
- 
+
 SOUNDOFFMID:
  lda #0
  sta $900b
  rts
- 
+
 SOUNDOFFALL:
  lda #0
  sta $900a
  sta $900b
  sta $900c
  rts
- 
+
 ;INPUT: none
 chktim:
  jsr $ffde ;call timer
@@ -993,7 +1032,7 @@ up:
  ;potential animation loop
  ;at the moment, it just doesn't let the player eat the objects
  cmp #$00		;if there is an obstacle, then move back to previous space
- beq moveEnd	
+ beq moveEnd
  inc col
  rts
 
@@ -1012,7 +1051,7 @@ down:
 
 moveEnd:
  rts
- 
+
 
 ;============================COLLISION DETECTION===================
 ;Checks for collisions between items
@@ -1028,7 +1067,7 @@ checkCollision:
  lda #$01
  cpx #wall_sprite	;collision with wall
  beq endColl
- lda #$02	
+ lda #$02
  cpx #portal_sprite	;portal
  beq endColl
  lda #$03
@@ -1039,13 +1078,13 @@ checkCollision:
  beq endColl
  lda #$05
  rts
- 
+
 noColl:		;no collision
  lda #$00
 endColl:
- rts 
+ rts
 
-;Subroutine that takes value in accumulator and 
+;Subroutine that takes value in accumulator and
 ;does collision based on value
 collisionAction:
  cmp #$01	;wall
@@ -1072,7 +1111,7 @@ wallColl:
  rts
 
 					;TODO: not completely reset game (like switching rooms)
- 
+
 ;crash into enemy: change player colour lose life if not invincible
 enemyColl:
  ;lda #$02
@@ -1081,7 +1120,7 @@ enemyColl:
  lda #$01		;no move
  rts
 
-  
+
 ;TODO: DOOR COLLISION
 doorColl:
  ;INSERT CODE HERE
@@ -1091,7 +1130,7 @@ doorColl:
  ;
  lda #$00
  rts
- 
+
 dropColl:
  lda #$03	;indicate picked up a drop
  ;TODO: subroutine to decide what to do with drop
@@ -1123,14 +1162,14 @@ portalAnimTop:
  jsr SOUNDOFFMID
 ; jmp gameLoopTop		;note: this currently resets game.
  jmp initCharsNextLevel
- 
-;check if invincible 
+
+;check if invincible
 checkInvincible:
  lda cur_char_col
  cmp #char_colour
  beq notInvincible
  rts
- 
+
 notInvincible:
  ldx row
  ldy col
@@ -1165,11 +1204,11 @@ stillInvincible:
  sta cur_char_col
 invinRet:
  rts
- 
+
 ;ARGUMENTS: Scratch: damage given to enemy
-loseLife:			
+loseLife:
  lda #space_sprite
- ldx lives		;x value 
+ ldx lives		;x value
  ldy #$00
  jsr drawToStatus	;draw over rightmost life, then decrement
  dec lives
@@ -1177,7 +1216,7 @@ loseLife:
  lda Scratch
  cmp #$00
  bpl loseLife		;loop until Scratch = 0
- lda lives					
+ lda lives
  cmp #$00			;check if player out of lives
  bpl loseLifeNext	;still alive
  jmp gameOver		;rip
@@ -1185,7 +1224,7 @@ loseLifeNext:
  rts
 
 ;This doesn't work yet
-playMusic: 
+playMusic:
  jsr playNoteA
  rts
  jsr $ffde
@@ -1223,7 +1262,7 @@ increaseScore:
 incOnes:
  inc score_ones
  jsr drawScore
- rts 
+ rts
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -1323,7 +1362,7 @@ prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
-score_init:				dc.b #$30	;#48 ; 0 
+score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
 temp_colour:			dc.b 0
@@ -1338,6 +1377,10 @@ seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+enemyxpos: dc.b 0,0,0,0,0,0,0,0,0
+enemyypos: dc.b 0,0,0,0,0,0,0,0,0
+enemyCount: dc.b 0
+enemyLoopCount: dc.b 0
 
 ;drawToPlayfield vars
 drawChar:				dc.b 0
@@ -1347,6 +1390,7 @@ Scratch2:				dc.b 0
 Ycoor:        dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
+temp1:        dc.b 0
 titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
 titleNameEnd
 titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
