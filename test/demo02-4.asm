@@ -1421,8 +1421,8 @@ seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-enemyxpos: dc.b 0,0,0,0,0,0,0,0,0
-enemyypos: dc.b 0,0,0,0,0,0,0,0,0
+enemyxpos: dc.b 0,0,0,0,0,0,0,0
+enemyypos: dc.b 0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
 
