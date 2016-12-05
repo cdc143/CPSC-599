@@ -15,7 +15,10 @@ To Do
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors //KM -> DONE
 -enemy lose health when hit by attack //KM -> DONE
--Swords and potions and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now
+-Swords and hearts and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now
+
+Instead of using swords, we could use eye lasers. These will be stupid easy to animate and make characters for. Also, will look probably less jarring then swapping sword characters during attack, since we aren’t using an animation
+
 
 Odds: (Feel free to change or comment on these)
 Sword: 1/8
