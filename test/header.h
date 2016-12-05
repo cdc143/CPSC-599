@@ -24,6 +24,7 @@ f5 = #55
 f1 = #39
 f3 = #47
 atk = #32	;space
+init_char_col = #1	;weakest sword
 wall_colour = #$44
 life_colour = 2
 screen_colour = #$0f
