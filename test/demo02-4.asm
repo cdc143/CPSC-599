@@ -48,15 +48,13 @@
  jsr $ffbd 		;initialize clock
 
 ;########################TITLE PAGE#######################
- lda char_colour
+ lda #$55	;green
  sta drawColour
 
 ;Super crappy title page.  TODO: Fix and make legible.
 ;I blasted away the names, but will put back later.
 titleScreen:
  jsr $e55f		;clear screen
- lda char_colour		;temporary colour start
- sta drawColour
  ;sta $900f
  lda #160
  jsr SOUNDONMID
