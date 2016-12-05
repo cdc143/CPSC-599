@@ -682,7 +682,7 @@ drawPRowLoop:
   rts
 
 ;############################# END OF LEVEL LOADING CODE ######################
-
+;input: x-reg: number of lives to draw to screen
 drawLives:		;draw lives to screen
  lda #life_colour
  sta drawColour
@@ -1100,6 +1100,7 @@ moveEnd:
 ;============================COLLISION DETECTION===================
 ;Checks for collisions between items
 ;returns value in accumulator based on what player hits
+;X-reg: returns sprite in space
 checkCollision:
  ldx row
  ldy col
@@ -1117,7 +1118,7 @@ checkCollision:
  lda #$03
  cpx #enemy_sprite	;enemy
  beq endColl
- lda #$04	;drop sprite
+ lda #$04	;door sprite
  cpx #door_sprite
  beq endColl
  lda #$05
@@ -1130,6 +1131,7 @@ endColl:
 
 ;Subroutine that takes value in accumulator and
 ;does collision based on value
+;input x-reg: sprite in current space
 collisionAction:
  cmp #$01	;wall
  beq wallColl
@@ -1175,13 +1177,24 @@ doorColl:
  lda #$00
  rts
 
+;input: x-reg: sprite in current space
 dropColl:
- lda #$03	;indicate picked up a drop
- ;TODO: subroutine to decide what to do with drop
- ;
- ;
- ;
- ;
+ cpx #lives_sprite
+ bne swordCheck
+ inc lives
+ ldx lives
+ jsr drawLives
+ lda #220
+ jsr SOUNDONHIGH
+ lda #$00
+ rts
+ 
+swordCheck:
+ cpx #sword_sprite
+ bne dropCollEnd
+ lda drawColour
+ sta cur_char_col
+dropCollEnd:
  lda #$00	;move over drop
  rts
 ;portal animation
