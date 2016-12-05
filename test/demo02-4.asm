@@ -48,14 +48,14 @@
  jsr $ffbd 		;initialize clock
 
 ;########################TITLE PAGE#######################
- lda #char_colour
+ lda char_colour
  sta drawColour
 
 ;Super crappy title page.  TODO: Fix and make legible.
 ;I blasted away the names, but will put back later.
 titleScreen:
  jsr $e55f		;clear screen
- lda #char_colour		;temporary colour start
+ lda char_colour		;temporary colour start
  sta drawColour
  ;sta $900f
  lda #160
@@ -438,7 +438,7 @@ drawToStatusBot:
  rts
 
 drawScore:
- lda #char_colour
+ lda char_colour
  sta drawColour
  lda score_tens
  ldx #$14
@@ -750,6 +750,8 @@ initChars:
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
+ lda #init_char_col
+ sta char_colour
  jsr drawScore
  jsr genRoom
  jsr initPRowAddr
@@ -768,7 +770,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  and #$07
  tay
  jsr initEnemyLocation
- lda #char_colour
+ lda char_colour
  sta cur_char_col
  sta drawColour
  lda #p1_sprite		; 'B'
@@ -1179,20 +1181,21 @@ doorColl:
 
 ;input: x-reg: sprite in current space
 dropColl:
- cpx #lives_sprite
+ cpx #lives_sprite		;check if heart
  bne swordCheck
- inc lives
- ldx lives
- jsr drawLives
- lda #220
+ inc lives				;increase number of lives
+ ldx lives			;load to draw to screen0
+ jsr drawLives	;re-draw lives
+ lda #220		;action sound
  jsr SOUNDONHIGH
  lda #$00
  rts
  
-swordCheck:
+swordCheck:		;check if sword
  cpx #sword_sprite
  bne dropCollEnd
- lda drawColour
+ lda drawColour		;store sword colour in character colour
+ sta char_colour
  sta cur_char_col
 dropCollEnd:
  lda #$00	;move over drop
@@ -1223,7 +1226,7 @@ portalAnimTop:
 ;check if invincible
 checkInvincible:
  lda cur_char_col
- cmp #char_colour
+ cmp char_colour
  beq notInvincible
  rts
 
@@ -1246,18 +1249,15 @@ notInvincible:
 
 isInvincible:
  lda cur_char_col
- cmp #char_colour
+ cmp char_colour
  beq stillInvincible 	;jump over
  lda invinc_time
  cmp #$00
  bne stillInvincible
- lda #char_colour
+ lda char_colour
  sta cur_char_col
 stillInvincible:
  dec invinc_time
- cmp #$03
- bpl invinRet
- lda #$01
  sta cur_char_col
 invinRet:
  rts
@@ -1419,6 +1419,7 @@ prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
+char_colour:	dc.b #$55
 ; score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
