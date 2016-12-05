@@ -942,11 +942,19 @@ drawSwordAttack2:
 
 hitEnemy:
  jsr attackDirection	;get location of enemy
- lda drawColour
+ lda char_colour	;p1 colour
+ and #$07		;get value between 0-8 for colour
+ lsr		;/2
+ clc
+ adc #$01	;add 1 so that lowest colour hits for one
+ sta Scratch
+ lda drawColour	;enemy colour
  and #$07		;mask because drawColour returns values >8
+ sbc Scratch	;enemy colour - p1 colour
  cmp #$01		;white, the weakest
- beq enemyDead
- dec drawColour		;decrement enemy colour
+ bmi enemyDead	
+ sta drawColour	;store enemy colour if not dead
+ ;dec drawColour		;decrement enemy colour
  lda #enemy_sprite
  jsr drawToPlayfield	;draw enemy to playfield
  lda #200				;player hits an enemy
@@ -1421,7 +1429,7 @@ prev_direction:			dc.b 0
 inventory:				dc.b 0
 score_ones:					dc.b 0
 score_tens:					dc.b 0
-char_colour:	dc.b #$55
+char_colour:	dc.b 0
 ; score_init:				dc.b #$30	;#48 ; 0
 pi_weapon:			dc.b #94
 prev_note:			dc.b 0
