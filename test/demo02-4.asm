@@ -1197,6 +1197,8 @@ swordCheck:		;check if sword
  lda drawColour		;store sword colour in character colour
  sta char_colour
  sta cur_char_col
+ lda #210		;action sound
+ jsr SOUNDONHIGH
 dropCollEnd:
  lda #$00	;move over drop
  rts
