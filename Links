@@ -11,11 +11,11 @@ To Do
 -Change seed to random based on timer //CD (Done)
 -"Random" level layouts //CD (Done)
 -get doors working again and random level changing/level changing for doors //CD will do this tomorrow. Just a matter of moving existing code into new door collision routine
--subroutines/what to do with items
+-subroutines/what to do with items // KM (Done)
 -Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
 -Enemy health by colors //KM -> DONE
 -enemy lose health when hit by attack //KM -> DONE
--Swords and hearts and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now
+-Swords and hearts and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now //KM (Done hearts and sword collision, will work on player damage based on colour)
 
 Instead of using swords, we could use eye lasers. These will be stupid easy to animate and make characters for. Also, will look probably less jarring then swapping sword characters during attack, since we aren’t using an animation
 
