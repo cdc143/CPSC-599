@@ -3,21 +3,27 @@ Links to stuff
 Maps:
 https://drive.google.com/drive/folders/0B7TVTVLBQt-TRWNkR1k3ZDNRcG8?usp=sharing
 To Do
+- Change skinny level layouts //CD
+//Y=0, Y=19
+//X=0,21
+-Instead of doing multicolor sword, do white sword and increase damage everytime one is picked up
+-If not attacking enemy, don't let attack happen
+-Copy alpha characters in character set
+-Copy in circle character for enemy
+-Change character sprite depending on movement direction //Small update to movement code
+-Get room switching working //CD
+-Get floor switching working //CD
+-Integrate Custom character set //CD
+-Fix reset level loading bug //CD
+-Change sword character to q or e
+-Change title screen to 
+-Enemy movement //LM
+-Improved enemy spawing and double doors //LM
+-Damage enemy health and heart healing based on color //KM
+-Change color on new floor //KM
+-Change score everytime player moves down floor //KM
+-Any code cleaning //Everyone
 
-(3x3 8 layouts) //CD (Done)
--Game loop //Apparently this is done
--Convert all drawing and collision routines     // LM partial work started in my local files, needs a game loop to work properly KM -> did basic collision stuff but can overwrite it, see demo02-4
--Convert all levels to new level layout routine //CD (Done)
--Change seed to random based on timer //CD (Done)
--"Random" level layouts //CD (Done)
--get doors working again and random level changing/level changing for doors //CD will do this tomorrow. Just a matter of moving existing code into new door collision routine
--subroutines/what to do with items // KM (Done)
--Enemy movement (some code for this exists in demo02-5)  (LM - see new branch, may be of some use)
--Enemy health by colors //KM -> DONE
--enemy lose health when hit by attack //KM -> DONE
--Swords and hearts and and enemy damage (different color). All drops dropping successfully. Needs to do something with them now //KM (Done hearts and sword collision, will work on player/enemy damage based on colour (done))
-
-Instead of using swords, we could use eye lasers. These will be stupid easy to animate and make characters for. Also, will look probably less jarring then swapping sword characters during attack, since we aren’t using an animation
 
 
 Odds: (Feel free to change or comment on these)
@@ -25,13 +31,4 @@ Sword: 1/8
 Potion 1/5
 Portal 1/255 (additional portal in room 8)
 
--Moving floors (loop the code) - this works with portal animation, but just need to keep track of floor level //KM -> floor counter in top right corner. Untested for tens, but works for ones)
--Difficulty settings
--Custom character set //CD (Done)
--Sound for in game events - see SoundTest.asm file; can be incorporated in once movement is complete //KM -> done for now, feel free to change sounds to desired tones
-
-  - add mod    // LM done, untested feel free to let me know if its busted KM -> I tried using it for enemy colours.  Mod ended up not being the right thing to use (needed to bitmask instead), but the function itself works well.
-  - update code that was protecting Y from the evil draw methods killing Y
-  - try timer stuff (is high byte of timer 4.2 ish seconds? (256 jiffies))
-    - if timer is successful add new time based movement code to game loop
-  - change portal method to choose one room (mod 8 + 1) that is not the room the player starts in
+Meet tomorrow for VIC test and any clean up
