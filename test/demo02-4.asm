@@ -1205,9 +1205,9 @@ dropCollSound:
 swordCheck:		;check if sword
  cpx #sword_sprite
  bne dropCollEnd
- lda drawColour		;store sword colour in character colour
- sta char_colour
- sta cur_char_col
+ ;lda char_colour
+ inc char_colour
+ inc cur_char_col
  lda #210		;action sound
  jsr SOUNDONHIGH
 dropCollEnd:
