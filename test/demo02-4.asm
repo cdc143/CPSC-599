@@ -942,12 +942,13 @@ hitEnemy:
  jsr attackDirection	;get location of enemy
  lda char_colour	;p1 colour
  and #$07		;get value between 0-8 for colour
- lsr		;/2
- clc
- adc #$01	;add 1 so that lowest colour hits for one
+ ;lsr		;/2
+ ;clc
+ ;adc #$01	;add 1 so that lowest colour hits for one
  sta Scratch
  lda drawColour	;enemy colour
  and #$07		;mask because drawColour returns values >8
+ sec
  sbc Scratch	;enemy colour - p1 colour
  cmp #$01		;white, the weakest
  bmi enemyDead	
@@ -1189,9 +1190,13 @@ doorColl:
 dropColl:
  cpx #lives_sprite		;check if heart
  bne swordCheck
+ lda lives
+ cmp #init_lives	;check if has max amount of lives already
+ beq dropCollSound	
  inc lives				;increase number of lives
  ldx lives			;load to draw to screen0
  jsr drawLives	;re-draw lives
+dropCollSound:
  lda #220		;action sound
  jsr SOUNDONHIGH
  lda #$00
@@ -1288,33 +1293,6 @@ loseLife:
 loseLifeNext:
  rts
 
-;This doesn't work yet
-; playMusic:
- ; jsr playNoteA
- ; rts
- ; jsr $ffde
- ; cmp #$00
- ; beq playNoteA
- ; rts
- ; cmp prev_note
- ; bne musicEnd
- ; sta prev_note
- ; and #$01
- ; cmp #$00
- ; beq playNoteB
- ; bne playNoteA
-
-; playNoteA:
- ; lda #180
- ; jsr SOUNDONMID
- ; rts
-; playNoteB:
- ; lda #240
- ; jsr SOUNDONMID
- ; rts
-; musicEnd:
- ; rts
-
 increaseScore:
  lda score_ones
  cmp #57
@@ -1328,6 +1306,7 @@ incOnes:
  inc score_ones
  jsr drawScore
  rts
+ 
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
