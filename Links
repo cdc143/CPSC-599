@@ -6,7 +6,7 @@ To Do
 - Change skinny level layouts //CD
 //Y=0, Y=19
 //X=0,21
--Instead of doing multicolor sword, do white sword and increase damage everytime one is picked up //KM - done
+-Instead of doing multicolor sword, do white sword and increase damage everytime one is picked up //KM - done  +1 increase part, not sword colour change part
 -If not attacking enemy, don't let attack happen
 -Copy alpha characters in character set
 -Copy in circle character for enemy
