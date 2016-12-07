@@ -105,12 +105,12 @@ drawTitleAnimation:	;this is a loop because don't need to constantly redraw titl
 titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
- cmp #f3
- beq gameLoopTop
- cmp #f1
- beq titleScreen
- cmp #f5
- bne drawTitleAnimation
+ cmp #64			;no key pressed
+ beq drawTitleAnimation		
+ cmp #f1			;have this or else resetting the game immediately puts you back into game
+ beq drawTitleAnimation
+ cmp #f5			;exit key pressed
+ bne gameLoopTop
  jsr $e55f
  brk
 
