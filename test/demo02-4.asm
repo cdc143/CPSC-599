@@ -504,8 +504,7 @@ loadLevelLoop:
  inc Ycoor
  cpy #$14 ;try to draw only 2 rows for now
  bne loadLevelLoop
-
- ldx #$01
+ ldx #$00
  stx Ycoor
  jsr putDoors
  jsr putDrops
@@ -515,14 +514,13 @@ putDoors:
   lda #wall_colour
   sta drawColour
   lda current_room
-  ; sta $1000
   cmp #$00
   bne room1
   jsr putRightDoor
   jsr putTopDoor
   rts
 room1:
-  ; lda current_room
+  lda current_room
   cmp #$01
   bne room2
   jsr putTopDoor
@@ -530,14 +528,14 @@ room1:
   jsr putLeftDoor
   rts
 room2:
-  ; lda current_room
+  lda current_room
   cmp #$02
   bne room3
   jsr putTopDoor
   jsr putLeftDoor
   rts
 room3:
-  ; lda current_room
+  lda current_room
   cmp #$03
   bne room4
   jsr putBottomDoor
@@ -545,7 +543,7 @@ room3:
   jsr putTopDoor
   rts
 room4:
-  ; lda current_room
+  lda current_room
   cmp #$04
   bne room5
   jsr putLeftDoor
@@ -554,7 +552,7 @@ room4:
   jsr putBottomDoor
   rts
 room5:
-  ; lda current_room
+  lda current_room
   cmp #$05
   bne room6
   jsr putLeftDoor
@@ -562,14 +560,14 @@ room5:
   jsr putBottomDoor
   rts
 room6:
-  ; lda current_room
+  lda current_room
   cmp #$06
   bne room7
   jsr putBottomDoor
   jsr putRightDoor
   rts
 room7:
-  ; lda current_room
+  lda current_room
   cmp #$07
   bne room8
   jsr putLeftDoor
@@ -577,7 +575,7 @@ room7:
   jsr putRightDoor
   rts
 room8:
-  ; lda current_room
+  lda current_room
   cmp #$08
   bne roomError
   jsr putLeftDoor
@@ -612,6 +610,14 @@ putBottomDoor:
  jsr drawToPlayfield
  inx
  rts
+putBottomDoor:
+  ldx #$0a
+  ldy #$13
+  lda #door_sprite
+  jsr drawToPlayfield
+  inx
+  jsr drawToPlayfield
+  rts
 putLeftDoor:
  ldy #$09
  ldx #$00
@@ -961,7 +967,7 @@ hitEnemy:
  sec
  sbc Scratch	;enemy colour - p1 colour
  cmp #$01		;white, the weakest
- bmi enemyDead	
+ bmi enemyDead
  sta drawColour	;store enemy colour if not dead
  ;dec drawColour		;decrement enemy colour
  lda #enemy_sprite
@@ -1188,12 +1194,7 @@ enemyColl:
 
 ;TODO: DOOR COLLISION
 doorColl:
- ;INSERT CODE HERE
- ;
- ;
- ;
- ;
- lda #$00
+ jsr loadNewLevel
  rts
 
 ;input: x-reg: sprite in current space
@@ -1202,7 +1203,7 @@ dropColl:
  bne swordCheck
  lda lives
  cmp #init_lives	;check if has max amount of lives already
- beq dropCollSound	
+ beq dropCollSound
  inc lives				;increase number of lives
  ldx lives			;load to draw to screen0
  jsr drawLives	;re-draw lives
@@ -1211,7 +1212,7 @@ dropCollSound:
  jsr SOUNDONHIGH
  lda #$00
  rts
- 
+
 swordCheck:		;check if sword
  cpx #sword_sprite
  bne dropCollEnd
@@ -1227,6 +1228,14 @@ dropCollEnd:
 portalColl:
 portalSound:
  jsr increaseScore
+ lda #$01
+ sta row
+ lda #$0a
+ sta col
+ jsr genRoom
+ lda #$00
+ sta current_room
+ jsr loadLevel
  lda #175
  jsr SOUNDONHIGH
  jsr $e55f
@@ -1316,7 +1325,7 @@ incOnes:
  inc score_ones
  jsr drawScore
  rts
- 
+
 drawTimer:	;timer to draw objects
  lda #$4f		; arbitrary number for timer
  jsr timerLoop	; jump to timer
@@ -1334,29 +1343,28 @@ timer:
 
 loadNewLevel:
   lda col
-  cmp #row_newLevel_begin		;checking top
+  cmp #00		;checking top
   bne checkright
   inc current_room
   inc current_room
   inc current_room
-  lda #col_newLevel_end
+  lda #col_newLevel_end-3
   sta col
-  dec col
   jsr loadLevel
   rts
 checkright:
   lda row
-  cmp #row_end
+  cmp #$15
   bne checkbottom
   inc current_room
-  lda #row_newLevel_begin
+  lda #$01
   sta row
   inc row
   jsr loadLevel
   rts
 checkbottom:
   lda col
-  cmp #col_newLevel_end
+  cmp #$13
   bne checkLeft
   dec current_room
   dec current_room
@@ -1369,12 +1377,11 @@ checkbottom:
   rts
 checkLeft:
   lda row
-  cmp #row_begin
+  cmp #$00
   bne error
   dec current_room
-  lda #row_end
+  lda #row_end-2
   sta row
-  dec row
   jsr loadLevel
   rts
 
@@ -1384,10 +1391,10 @@ error: ;shouldn't happen
 
 level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level1: dc.b $01,$02,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$01
-level2: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$02,$04,$04,$04,$04,$04,$04,$04,$01
+level2: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$04,$04,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level3: dc.b $01,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$01
 level4: dc.b $01,$05,$05,$05,$05,$05,$05,$05,$05,$02,$02,$02,$05,$05,$05,$05,$05,$05,$05,$01
-level5: dc.b $01,$05,$05,$05,$05,$02,$06,$06,$06,$06,$06,$02,$06,$06,$06,$06,$02,$05,$05,$01
+level5: dc.b $01,$05,$05,$05,$05,$02,$02,$06,$06,$06,$06,$02,$02,$06,$06,$02,$02,$05,$05,$01
 level6: dc.b $01,$05,$05,$05,$02,$07,$07,$07,$07,$07,$07,$02,$07,$07,$07,$07,$07,$07,$02,$01
 level7: dc.b $01,$05,$04,$08,$09,$0a,$0b,$0c,$02,$02,$02,$02,$0c,$0b,$0a,$09,$08,$04,$05,$01
 
@@ -1396,7 +1403,7 @@ prow1: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,
 prow2: dc.b $66,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$66
 prow3: dc.b $66,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,$66,$20,$20,$20,$66,$66,$66,$20,$20,$20,$66
 prow4: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
-prow5: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
+prow5: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66
 prow6: dc.b $66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66
 prow7: dc.b $66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66,$20,$66
 prow8: dc.b $66,$66,$66,$66,$66,$66,$66,$66,$20,$20,$20,$20,$20,$66,$66,$66,$66,$66,$66,$66,$66,$66
