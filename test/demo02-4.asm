@@ -604,13 +604,6 @@ putTopDoor:
  jsr drawToPlayfield
  rts
 putBottomDoor:
- ldx #$09
- ldy #$13
- lda #door_sprite
- jsr drawToPlayfield
- inx
- rts
-putBottomDoor:
   ldx #$0a
   ldy #$13
   lda #door_sprite
