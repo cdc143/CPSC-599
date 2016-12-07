@@ -734,10 +734,12 @@ initEnemyLoop:
  tay
  ldx enemyX
  jsr getFromScreen
- cmp wall_sprite
- beq initEnemyLoop
- cmp door_sprite
- beq initEnemyLoop
+ ;cmp #wall_sprite
+ ;beq initEnemyLoop
+ ;cmp #door_sprite
+ ;beq initEnemyLoop
+ cmp #space_sprite
+ bne initEnemyLoop
  txa
  ldx enemyLoopCount
  sta enemyxpos,x
