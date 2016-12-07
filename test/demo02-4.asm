@@ -1271,7 +1271,7 @@ portalColl:
  inc cur_wall_col
  bne portalColl2
 resetWallCol:
- lda #$01
+ lda #$00		;allows for "invisible" level; use lda #$01 to reset to white
  sta cur_wall_col
 portalColl2:
  jsr increaseScore
