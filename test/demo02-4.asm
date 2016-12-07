@@ -1216,12 +1216,25 @@ swordCheck:		;check if sword
  bne dropCollEnd
  lda char_colour
  and #$07
- cmp #$07
+ tax
+ jsr getRandom	;random number to check whether sword is "good" or "bad"
+ and #$01
+ cmp #$00
+ bne negSword		;bad sword
+ lda #210			;good sword sound
+ cpx #$07		;check if already have max sword value
  beq dropSwordEnd
  inc char_colour
  inc cur_char_col
+ bne dropSwordEnd
+negSword:
+ lda #135	;bad sword sound
+ cpx #$01
+ beq dropSwordEnd		;already have weakest sword value 
+ dec char_colour
+ dec cur_char_col
 dropSwordEnd:
- lda #210		;action sound
+ ;lda #210		;action sound
  jsr SOUNDONHIGH
 dropCollEnd:
  lda #$00	;move over drop
