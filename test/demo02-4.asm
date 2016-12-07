@@ -511,7 +511,7 @@ loadLevelLoop:
  rts
 
 putDoors:
-  lda #wall_colour
+  lda cur_wall_col
   sta drawColour
   lda current_room
   cmp #$00
@@ -670,7 +670,7 @@ putPotion: ;Assumes x coordinate and y coordinate to draw will be passed in
 
 drawPRow: ;Expects address of row to draw in $fd. Saves callers y reg
   ldx #$00
-  lda #wall_colour
+  lda cur_wall_col
   sta drawColour
   sty tempY
 drawPRowLoop:
@@ -756,6 +756,8 @@ quitBounce:
 initChars:
  lda #init_char_col
  sta char_colour		;initial colour for character
+ lda #wall_colour
+ sta cur_wall_col		;initial colour for walls
  lda #$01
  sta row		; row
  lda #$0b
@@ -1213,9 +1215,13 @@ dropCollSound:
 swordCheck:		;check if sword
  cpx #sword_sprite
  bne dropCollEnd
- ;lda char_colour
+ lda char_colour
+ and #$07
+ cmp #$07
+ beq dropSwordEnd
  inc char_colour
  inc cur_char_col
+dropSwordEnd:
  lda #210		;action sound
  jsr SOUNDONHIGH
 dropCollEnd:
@@ -1223,7 +1229,16 @@ dropCollEnd:
  rts
 ;portal animation
 portalColl:
- inc wall_colour	;increment wall colour
+ lda cur_wall_col	;increment wall colour
+ and #$0f
+ cmp #$0f		;colour 8 is black - invisible wall mode! -we can get rid of this if we don't want it
+ beq resetWallCol
+ inc cur_wall_col
+ bne portalColl2
+resetWallCol:
+ lda #$01
+ sta cur_wall_col
+portalColl2:
  jsr increaseScore
  lda #$01
  sta row
@@ -1430,6 +1445,7 @@ prev_note:			dc.b 0
 temp_colour:			dc.b #$08
 timer_loop:			dc.b 0
 cur_char_col:	dc.b 0
+cur_wall_col:	dc.b 0
 ; row_begin:			dc.b #$00
 ; row_newLevel_begin: dc.b #$01
 ; col_newLevel_end:   dc.b #$14
