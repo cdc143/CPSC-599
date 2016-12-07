@@ -15,7 +15,7 @@ copyLoop:
   lda leftpose,x
   sta $1c00,x
   inx
-  cpx #$58
+  cpx #$50
   bne copyLoop
   ldx #$00
 copyNums:
