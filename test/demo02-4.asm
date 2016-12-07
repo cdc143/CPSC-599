@@ -771,7 +771,10 @@ initEnemyLoop:
  txa
  ldx enemyLoopCount
  sta enemyxpos,x
- sty enemyypos,x
+ pha
+ tya
+ sta enemyypos,x
+ pla
  tax
  lda #enemy_sprite
  jsr drawToPlayfield
@@ -903,7 +906,7 @@ drawEnemy:
  ldx enemyxpos
  lda #enemy_sprite
  jsr drawToPlayfield
- 
+
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
