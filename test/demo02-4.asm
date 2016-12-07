@@ -729,15 +729,11 @@ initEnemyLoop:
  sta enemyX
  jsr getRandom
  tax
- ldy #$14			; Y mod 20
+ ldy #$13			; Y mod 20
  jsr mod
  tay
  ldx enemyX
  jsr getFromScreen
- ;cmp #wall_sprite
- ;beq initEnemyLoop
- ;cmp #door_sprite
- ;beq initEnemyLoop
  cmp #space_sprite
  bne initEnemyLoop
  txa
@@ -750,7 +746,7 @@ initEnemyLoop:
  inc enemyLoopCount
  lda enemyLoopCount
  cmp enemyCount
- bne initEnemyLoop
+ bmi initEnemyLoop
  rts
 quitBounce:
  jmp quit
