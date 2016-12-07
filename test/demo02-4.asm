@@ -655,6 +655,8 @@ dropEnd:
  rts
 
 putSword: ;Assumes x coordinate and y coordinate to draw will be passed in
+  lda #$01
+  sta drawColour	;white sword
   lda #sword_sprite
   jsr drawToPlayfield
   rts
@@ -752,13 +754,15 @@ quitBounce:
  jmp quit
 
 initChars:
+ lda #init_char_col
+ sta char_colour		;initial colour for character
  lda #$01
  sta row		; row
  lda #$0b
  sta col		; col
 initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
- lda #init_char_col
- sta char_colour
+ ;lda #init_char_col
+ ;sta char_colour		;we don't want to reset the character colour every level
  jsr drawScore
  jsr genRoom
  jsr initPRowAddr
@@ -1219,7 +1223,7 @@ dropCollEnd:
  rts
 ;portal animation
 portalColl:
-portalSound:
+ inc wall_colour	;increment wall colour
  jsr increaseScore
  lda #$01
  sta row
@@ -1245,6 +1249,8 @@ portalAnimTop:
  cpx #$00
  bne portalAnimTop
  jsr SOUNDOFFMID
+ lda #screen_colour
+ sta $900f
 ; jmp gameLoopTop		;note: this currently resets game.
  jmp initCharsNextLevel
 
@@ -1313,7 +1319,8 @@ increaseScore:
  lda #48
  sta score_ones
  jsr drawScore
- jmp portalSound
+ rts
+ ;jmp portalColl
 incOnes:
  inc score_ones
  jsr drawScore
