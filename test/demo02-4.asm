@@ -722,23 +722,26 @@ initEnemyLocation:
  sta enemyLoopCount
 initEnemyLoop:
  jsr getRandom
- and #$0f
- tax
+ tax					; number to mod
+ ldy #$16			; X mod 22
+ jsr mod
+ sta enemyX
  jsr getRandom
- and #$0f
+ tax
+ ldy #$14			; Y mod 20
+ jsr mod
  tay
+ ldx enemyX
  jsr getFromScreen
- ;sta $1000
- ;brk
- cmp #$66
-
+ cmp wall_sprite
+ beq initEnemyLoop
+ cmp door_sprite
  beq initEnemyLoop
  txa
  ldx enemyLoopCount
  sta enemyxpos,x
  sty enemyypos,x
  tax
- ;sta drawColour
  lda #enemy_sprite
  jsr drawToPlayfield
  inc enemyLoopCount
@@ -747,7 +750,7 @@ initEnemyLoop:
  bne initEnemyLoop
  rts
 quitBounce:
-   jmp quit
+ jmp quit
 
 initChars:
  lda #$01
@@ -1433,6 +1436,7 @@ enemyxpos: dc.b 0,0,0,0,0,0,0,0
 enemyypos: dc.b 0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
+enemyX				dc.b 0
 
 ;mod vars
 divisor					dc.b 0
