@@ -827,48 +827,57 @@ quit:
  brk			 ; quit
 
 EnemyMove:
- ;jsr getRandom
- ;and #$01
- ;cmp #$00
- ;beq CheckX
- ;lda enemyypos ; else check Y
- ;cmp col
- ;beq endMove
- ;bcc LessY
- ;dec enemyypos
- ;ldy enemyypos
- ;ldx enemyxpos
- ;lda #enemy_sprite
- ;jsr drawToPlayfield
- ;rts
-;LessY:
- ;inc enemyypos
- ;ldy enemyypos
- ;ldx enemyxpos
- ;lda #enemy_sprite
- ;jsr drawToPlayfield
- ;rts
-;CheckX:
- ;lda enemyypos ; else check Y
- ;cmp row
- ;bcc LessX
- ;beq endMove
- ;dec enemyxpos
- ;ldy enemyypos
- ;ldx enemyxpos
- ;lda #enemy_sprite
- ;jsr drawToPlayfield
- ;rts
-;LessX:
- ;inc enemyxpos
- ;ldy enemyypos
- ;ldx enemyxpos
- ;lda #enemy_sprite
- ;jsr drawToPlayfield
- ;rts
+ jsr getRandom
+ and #$01
+ cmp #$00
+ beq CheckX
+ lda enemyypos ; else check Y
+ cmp col
+ beq endMove
+ bcc LessY
+ jsr clearEnemy
+ dec enemyypos
+ ldy enemyypos
+ ldx enemyxpos
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
+LessY:
+ jsr clearEnemy
+ inc enemyypos
+ ldy enemyypos
+ ldx enemyxpos
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
+CheckX:
+ lda enemyypos ; else check Y
+ cmp row
+ bcc LessX
+ beq endMove
+ jsr clearEnemy
+ dec enemyxpos
+ ldy enemyypos
+ ldx enemyxpos
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
+LessX:
+ jsr clearEnemy
+ inc enemyxpos
+ ldy enemyypos
+ ldx enemyxpos
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
 endMove:
   rts
-
+clearEnemy:
+ ldy enemyypos
+ ldx enemyxpos
+ lda #space_sprite
+ jsr drawToPlayfield
+ rts
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
