@@ -15,7 +15,7 @@ To Do
 -Get floor switching working //CD (done)
 -Integrate Custom character set //CD
 -Fix reset level loading bug //CD (done)
--Change sword character to q or e
+-Change sword character to q or e //LM is now Q (done)
 -Change title screen to any key //KM (done)
 -Enemies need to spawn in every room (should just involve calling code again) //KM -> done, but some bugs to work out
  
