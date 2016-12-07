@@ -590,63 +590,70 @@ roomError:
 
 
 putRightDoor:
-  ldy #$0a ;Should be 9, glitch in drawing code
-  ldx #$15
-  lda #door_sprite
-  jsr drawToPlayfield
-  rts
+ ldy #$09
+ ldx #$15
+ lda #door_sprite
+ jsr drawToPlayfield
+ iny
+ jsr drawToPlayfield
+ rts
 putTopDoor:
-  ldx #$0a
-  ldy #$01
-  lda #door_sprite
-  jsr drawToPlayfield
-  rts
+ ldx #$0a
+ ldy #$00
+ lda #door_sprite
+ jsr drawToPlayfield
+ inx
+ jsr drawToPlayfield
+ rts
 putBottomDoor:
-  ldx #$0a
-  ldy #$14
-  lda #door_sprite
-  jsr drawToPlayfield
-  rts
+ ldx #$09
+ ldy #$13
+ lda #door_sprite
+ jsr drawToPlayfield
+ inx
+ rts
 putLeftDoor:
-  ldy #$0a ;Should be 9, glitch in drawing code
-  ldx #$00
-  lda #door_sprite
-  jsr drawToPlayfield
-  rts
+ ldy #$09
+ ldx #$00
+ lda #door_sprite
+ jsr drawToPlayfield
+ iny
+ jsr drawToPlayfield
+ rts
 putPortal:
-  ldy #$0a
-  ldx #$0b
-  lda #portal_sprite
-  jsr drawToPlayfield
-  rts
+ ldy #$0a
+ ldx #$0b
+ lda #portal_sprite
+ jsr drawToPlayfield
+ rts
 putDrops: ;Randomly decide if portal, potion or sword or none
 dropLoop:
-  jsr getRandom
-  and #$0f
-  tay
-  jsr getRandom
-  and #$0f
-  tax
-  jsr getFromScreen
-  cmp #space_sprite
-  bne dropLoop
-  jsr getRandom
-  cmp #$20
-  bcc drop1
-  cmp #$c8
-  bcs drop2
-  cmp #$39
-  bne dropEnd
-  jsr putPortal
-  rts
+ jsr getRandom
+ and #$0f
+ tay
+ jsr getRandom
+ and #$0f
+ tax
+ jsr getFromScreen
+ cmp #space_sprite
+ bne dropLoop
+ jsr getRandom
+ cmp #$20
+ bcc drop1
+ cmp #$c8
+ bcs drop2
+ cmp #$39
+ bne dropEnd
+ jsr putPortal
+ rts
 drop1:
-  jsr putSword
-  rts
+ jsr putSword
+ rts
 drop2:
-  jsr putPotion
-  rts
+ jsr putPotion
+ rts
 dropEnd:
-  rts
+ rts
 
 putSword: ;Assumes x coordinate and y coordinate to draw will be passed in
   lda #sword_sprite
