@@ -436,7 +436,7 @@ drawToStatusBot:
  rts
 
 drawScore:
- lda char_colour
+ lda cur_wall_col
  sta drawColour
  lda score_tens
  ldx #$14
@@ -1230,8 +1230,8 @@ dropCollEnd:
 ;portal animation
 portalColl:
  lda cur_wall_col	;increment wall colour
- and #$0f
- cmp #$0f		;colour 8 is black - invisible wall mode! -we can get rid of this if we don't want it
+ and #$07
+ cmp #$07
  beq resetWallCol
  inc cur_wall_col
  bne portalColl2
