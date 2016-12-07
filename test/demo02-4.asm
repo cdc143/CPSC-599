@@ -106,7 +106,7 @@ titleInput:
  lda $00c5			;check for start.  Only can press start right now. Probably should
  sta current_key
  cmp #64			;no key pressed
- beq drawTitleAnimation		
+ beq drawTitleAnimation
  cmp #f1			;have this or else resetting the game immediately puts you back into game
  beq drawTitleAnimation
  cmp #f5			;exit key pressed
@@ -810,40 +810,9 @@ top:			; top of loop
  lda #p1_sprite
  jsr drawToPlayfield
  jsr drawTimer
+ jsr EnemyMove
 ;;--------------------End of drawing character to screen
- ;lda enemyxpos
- ;cmp row
- ;beq checkColumn
- ;bcc rowLess
- ;Move left
- ;If fail check Column
- ;clc
- ;bcc end
-rowLess:
- ;Move right
- ;If failure check Column
- ;bpl end
-checkColumn:
- ;lda enemyypos
- ;cmp col
- ;beq end
- ;bcc columnLess
- ;Move up
- ;If fail don't move
 
- ;clc
- ;bcc end
-columnLess:
-  ;Move down
-  ;If fail, don't move
-end:
- ;rts
-;put enemy movement here
-
-; for each in enemy pos
-; update Position at x,y
-; load x and y
-; redraw enemy
 
 next:
   ;Wait for user to press enter, and restore the character set
@@ -856,6 +825,49 @@ next:
 quit:
  jsr $e55f       ; clear screen before exiting
  brk			 ; quit
+
+EnemyMove:
+ ;jsr getRandom
+ ;and #$01
+ ;cmp #$00
+ ;beq CheckX
+ ;lda enemyypos ; else check Y
+ ;cmp col
+ ;beq endMove
+ ;bcc LessY
+ ;dec enemyypos
+ ;ldy enemyypos
+ ;ldx enemyxpos
+ ;lda #enemy_sprite
+ ;jsr drawToPlayfield
+ ;rts
+;LessY:
+ ;inc enemyypos
+ ;ldy enemyypos
+ ;ldx enemyxpos
+ ;lda #enemy_sprite
+ ;jsr drawToPlayfield
+ ;rts
+;CheckX:
+ ;lda enemyypos ; else check Y
+ ;cmp row
+ ;bcc LessX
+ ;beq endMove
+ ;dec enemyxpos
+ ;ldy enemyypos
+ ;ldx enemyxpos
+ ;lda #enemy_sprite
+ ;jsr drawToPlayfield
+ ;rts
+;LessX:
+ ;inc enemyxpos
+ ;ldy enemyypos
+ ;ldx enemyxpos
+ ;lda #enemy_sprite
+ ;jsr drawToPlayfield
+ ;rts
+endMove:
+  rts
 
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
@@ -1232,7 +1244,7 @@ swordCheck:		;check if sword
 negSword:
  lda #135	;bad sword sound
  cpx #$01
- beq dropSwordEnd		;already have weakest sword value 
+ beq dropSwordEnd		;already have weakest sword value
  dec char_colour
  dec cur_char_col
 dropSwordEnd:
