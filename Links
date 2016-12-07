@@ -8,8 +8,8 @@ To Do
 //X=0,21
 -Instead of doing multicolor sword, do white sword and increase damage everytime one is picked up //KM - done  +1 increase part, not sword colour change part (done)
 -If not attacking enemy, don't let attack happen //KM
--Copy alpha characters in character set
--Copy in circle character for enemy
+-Copy alpha characters in character set (Done)
+-Copy in circle character for enemy //CD (Done)
 -Change character sprite depending on movement direction //Small update to movement code
 -Get room switching working //CD (done)
 -Get floor switching working //CD (done)
