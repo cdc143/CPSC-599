@@ -8,15 +8,15 @@ status_colour_top equ $9600
 status_colour_bot equ $97ce
 status_loc_top equ $1e00
 status_loc_bot equ $1fce
-space_sprite = #04
-wall_sprite = #05
-portal_sprite = $7f
+space_sprite = #$04
+wall_sprite = #$05
+portal_sprite = #$07
 p1_sprite = #$01
 lives_sprite = #$09		;heart
 door_sprite = #$06
 enemy_sprite = #$02		;circle
 
-sword_sprite = $58
+sword_sprite = #$08
 w = #9
 a = #17
 s = #41

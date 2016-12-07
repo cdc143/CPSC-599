@@ -49,24 +49,36 @@
 
 ;########################TITLE PAGE#######################
  ;Change character set
-
- ldx #$00
+  ldx #$00
 copyLoop:
  lda leftpose,x
  sta $1c00,x
  inx
- cpx #$50
+ cpx #$60
  bne copyLoop
  ldx #$00
 copyNums:
- lda $8180,x
- sta $1c58,x
- inx
- cpx #$50
- bne copyNums
+ ;lda $8180,x
+ ;sta $1c60,x
+ ;inx
+ ;cpx #$50
+ ;bne copyNums
+ ;ldx #$00
+copyHeart:
+ ;lda $8298,x
+ ;sta $1c88,x
+ ;inx
+ ;cpx #$08
+ ;bne copyHeart
+ ;ldx #$00
+;copyPortal:
+ ;lda $83f8,x
+ ;sta $1c90,x
+ ;inx
+ ;cpx #$08
+ ;bne copyPortal
  lda #$ff
  sta $9005
-
  lda #$55	;green
  sta drawColour
 
@@ -1550,5 +1562,4 @@ door:     dc.b $81,$42,$24,$18,$18,$24,$42,$81
 portal:   dc.b #240,#240,#240,#240,#15,#15,#15,#15
 sword:    dc.b #24,#24,#24,#24,#24,#00,#24,#24
 heart:    dc.b $36,$7f,$7f,$7f,$3e,$1c,$08,$00
-
-enemy:    dc.b $00,$3c,$42,$42,$42,$42,$3c,$00
+sword1:    dc.b #24,#24,#24,#24,#24,#00,#24,#24
