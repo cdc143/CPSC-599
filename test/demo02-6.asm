@@ -727,8 +727,8 @@ drawLives:		;draw lives to screen
  lda #lives_sprite
  jsr drawToStatus
  dex
- cpx #$00
- bne drawLives
+ cpx #$01
+ bpl drawLives
  rts
 
 gameOver: ;
