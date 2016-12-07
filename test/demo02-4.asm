@@ -186,6 +186,7 @@ gameLoopTop:
 getRandom:
  lda $9114
  adc $9004
+ clc
  sta seed
  rts
 
