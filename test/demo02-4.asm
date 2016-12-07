@@ -1196,7 +1196,7 @@ enemyColl:
 ;TODO: DOOR COLLISION
 doorColl:
  jsr loadNewLevel
- jsr initEnemyLocation
+ jsr initEnemyLocation		;load enemies
  rts
 
 ;input: x-reg: sprite in current space
