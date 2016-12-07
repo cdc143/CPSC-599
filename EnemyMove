@@ -1,0 +1,69 @@
+EnemyMove:
+ lda #$00
+ sta enemyLoopCount
+enemyMoveLoop:
+ ldx enemyLoopCount
+ lda enemyypos,x
+ sta enemyY			; store temp Y value
+ lda enemyxpos,x
+ sta enemyX			; store temp X value
+ jsr clearEnemy
+ jsr getRandom
+ and #$01
+ cmp #$00
+ beq CheckX
+ lda enemyypos ; else check Y
+ cmp col
+ bcc LessY
+ beq endMove
+ dec enemyY
+ jmp enemyCheckColl
+LessY:
+ inc enemyY
+ jmp enemyCheckColl
+CheckX:
+ lda enemyypos ; else check Y
+ cmp row
+ bcc LessX
+ beq endMove
+ dec enemyX
+ jmp enemyCheckColl
+LessX:
+ inc enemyX
+enemyCheckColl:
+ ldx enemyX
+ ldy enemyY
+ jsr getFromScreen
+ cmp #space_sprite
+ bne endMove
+ ldx enemyLoopCount
+ lda enemyX
+ sta enemyxpos,x
+ lda enemyY
+ sta enemyypos,x
+endMove:
+ jsr drawEnemy
+ inc enemyLoopCount
+ lda enemyCount
+ cmp enemyLoopCount
+ bmi enemyMoveLoop
+ rts
+clearEnemy:				; clears the enemy from the screen and also gets its colour
+ ldy enemyY
+ ldx enemyX
+ jsr getFromScreen			; to get the enemies colour
+ lda drawColour
+ sta enemyColour		; save enemy colour
+ lda #space_sprite
+ jsr drawToPlayfield
+ rts
+drawEnemy:
+ ldx enemyLoopCount
+ ldy enemyypos,x
+ lda enemyxpos,x
+ tax
+ lda enemyColour
+ sta drawColour
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
