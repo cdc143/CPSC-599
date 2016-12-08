@@ -872,11 +872,20 @@ EnemyMove:
  bcc LessY
  jsr clearEnemy
  dec enemyypos
+ jsr checkValidEnMove
+ cmp #$01
+ beq drawEnemy
+ inc enemyypos
  jsr drawEnemy
  rts
+
 LessY:
  jsr clearEnemy
  inc enemyypos
+ jsr checkValidEnMove
+ cmp #$01
+ beq drawEnemy
+ dec enemyypos
  jsr drawEnemy
  rts
 CheckX:
@@ -886,11 +895,19 @@ CheckX:
  beq endMove
  jsr clearEnemy
  dec enemyxpos
+ jsr checkValidEnMove
+ cmp #$01
+ beq drawEnemy
+ inc enemyxpos
  jsr drawEnemy
  rts
 LessX:
  jsr clearEnemy
  inc enemyxpos
+ jsr checkValidEnMove
+ cmp #$01
+ beq drawEnemy
+ dec enemyxpos
  jsr drawEnemy
  rts
 endMove:
@@ -906,7 +923,19 @@ drawEnemy:
  ldx enemyxpos
  lda #enemy_sprite
  jsr drawToPlayfield
+ rts
 
+checkValidEnMove:
+ ldy enemyypos
+ ldx enemyxpos
+ jsr getFromScreen
+ cmp #space_sprite
+ bne retVEM0
+ lda #$01
+ rts
+retVEM0:
+ lda #$00
+ rts
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
