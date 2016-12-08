@@ -1011,9 +1011,9 @@ swordS:
 swordD:
  lda #3
 drawSwordAttack2:
- lda char_colour
- sta drawColour
- jsr drawToPlayfield	;draw to screen
+ ; lda char_colour
+ ; sta drawColour
+ ; jsr drawToPlayfield	;draw to screen
  lda #241				;play sword sound
  jsr SOUNDONLOW
  rts
