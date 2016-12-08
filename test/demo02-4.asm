@@ -1416,10 +1416,10 @@ loseLifeNext:
 
 increaseScore:
  lda score_ones
- cmp #57
+ cmp #9
  bne incOnes
  inc score_tens
- lda #48
+ lda #0
  sta score_ones
  jsr drawScore
  rts
