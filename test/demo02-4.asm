@@ -50,6 +50,7 @@
 ;########################TITLE PAGE#######################
  ;Change character set
   ldx #$00
+initCharset:
 copyLoop:
  lda leftpose,x
  sta $1c50,x
@@ -64,21 +65,9 @@ copyNums:
  cpx #$50
  bne copyNums
  ldx #$00
-copyHeart:
- ;lda $8298,x
- ;sta $1c88,x
- ;inx
- ;cpx #$08
- ;bne copyHeart
- ;ldx #$00
-;copyPortal:
- ;lda $83f8,x
- ;sta $1c90,x
- ;inx
- ;cpx #$08
- ;bne copyPortal
  lda #$ff
  sta $9005
+
  lda #$55	;green
  sta drawColour
 
@@ -1546,8 +1535,7 @@ seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-enemyxpos: dc.b 0,0,0,0,0,0,0,0
-enemyypos: dc.b 0,0,0,0,0,0,0,0
+
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
 enemyX:				dc.b 0
@@ -1570,9 +1558,9 @@ Ycoor: 		 dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
 temp1:        dc.b 0
-titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
+titleName:
 titleNameEnd
-titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
+titleAuthors:
 titleAuthorsEnd
 theme:		dc.b #165, #180, #131, #158, #185, #145	;these are completely random, so please change if desired!
 themeEnd
