@@ -737,11 +737,10 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  jmp titleScreen
 
 initEnemyLocation:
- lda #$05
- ;jsr getRandom	;just gets a random colour for now, change this when have more memory
- ;and #$03
+ jsr getRandom	;just gets a random colour for now, change this when have more memory
+ and #$07
  sta enemyCount
- lda #$00
+ lda #$0
  sta enemyLoopCount
 initEnemyLoop:
  jsr getRandom
@@ -766,7 +765,7 @@ initEnemyLoop:
  inc enemyLoopCount
  lda enemyLoopCount
  cmp enemyCount
- bne initEnemyLoop
+ bcc initEnemyLoop
  rts
 quitBounce:
  jmp quit
