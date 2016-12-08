@@ -862,80 +862,64 @@ quit:
  brk			 ; quit
 
 EnemyMove:
+ lda enemyypos
+ sta enemyY			; store temp Y value
+ lda enemyxpos
+ sta enemyX			; store temp X value
+ jsr clearEnemy
  jsr getRandom
  and #$01
  cmp #$00
  beq CheckX
  lda enemyypos ; else check Y
  cmp col
- beq endMove
  bcc LessY
- jsr clearEnemy
- dec enemyypos
- jsr checkValidEnMove
- cmp #$01
- beq drawEnemy
- inc enemyypos
- jsr drawEnemy
- rts
-
+ beq endMove
+ dec enemyY
+ jmp enemyCheckColl
 LessY:
- jsr clearEnemy
- inc enemyypos
- jsr checkValidEnMove
- cmp #$01
- beq drawEnemy
- dec enemyypos
- jsr drawEnemy
- rts
+ inc enemyY
+ jmp enemyCheckColl
 CheckX:
  lda enemyypos ; else check Y
  cmp row
  bcc LessX
  beq endMove
- jsr clearEnemy
- dec enemyxpos
- jsr checkValidEnMove
- cmp #$01
- beq drawEnemy
- inc enemyxpos
- jsr drawEnemy
- rts
+ dec enemyX
+ jmp enemyCheckColl
 LessX:
- jsr clearEnemy
- inc enemyxpos
- jsr checkValidEnMove
- cmp #$01
- beq drawEnemy
- dec enemyxpos
+ inc enemyX
+enemyCheckColl:
+ ldx enemyX
+ ldy enemyY
+ jsr getFromScreen
+ cmp #space_sprite			; check for space
+ bne endMove
+ lda enemyX						; update location
+ sta enemyxpos
+ lda enemyY
+ sta enemyypos
+endMove:
  jsr drawEnemy
  rts
-endMove:
- rts
-clearEnemy:
- ldy enemyypos
- ldx enemyxpos
+clearEnemy:				; clears the enemy from the screen and also gets its colour
+ ldy enemyY
+ ldx enemyX
+ jsr getFromScreen			; to get the enemies colour
+ lda drawColour
+ sta enemyColour		; save enemy colour
  lda #space_sprite
  jsr drawToPlayfield
  rts
 drawEnemy:
  ldy enemyypos
  ldx enemyxpos
+ lda enemyColour
+ sta drawColour
  lda #enemy_sprite
  jsr drawToPlayfield
  rts
-
-checkValidEnMove:
- ldy enemyypos
- ldx enemyxpos
- jsr getFromScreen
- cmp #space_sprite
- bne retVEM0
- lda #$01
- rts
-retVEM0:
- lda #$00
- rts
+ 
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
@@ -1553,7 +1537,9 @@ enemyxpos: dc.b 0,0,0,0,0,0,0,0
 enemyypos: dc.b 0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
-enemyX				dc.b 0
+enemyX:				dc.b 0
+enemyY:				dc.b 0
+enemyColour:		dc.b 0
 
 ;mod vars
 divisor					dc.b 0
