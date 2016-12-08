@@ -11,7 +11,6 @@ status_loc_bot equ $1fce
 space_sprite = #$0e
 wall_sprite = #$0f
 portal_sprite = #$11
-p1_sprite = #$0b
 lives_sprite = #$13		;heart
 door_sprite = #$10
 enemy_sprite = #$0c		;circle

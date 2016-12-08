@@ -804,7 +804,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  lda char_colour
  sta cur_char_col
  sta drawColour
- lda #p1_sprite		; 'B'
+ lda p1_sprite		; 'B'
  ;jsr drawToScreen
  ldx row
  ldy col
@@ -827,7 +827,7 @@ top:			; top of loop
  ldy col
  lda cur_char_col
  sta drawColour
- lda #p1_sprite
+ lda p1_sprite
  jsr drawToPlayfield
  jsr drawTimer
  jsr EnemyMove
@@ -1125,6 +1125,8 @@ chktimEnd:
 ;if there is something there, return 1 in y
 ;else, return 0 in y
 left:
+ lda #$0a
+ sta p1_sprite
  lda #space_sprite
  cpx #row_begin				; check if end of screen on left
  beq moveEnd
@@ -1138,6 +1140,8 @@ left:
  rts
 
 right:			;similar as above left subroutine
+ lda #$0b
+ sta p1_sprite
  lda #space_sprite
  cpx #row_end		 ; check if x =21 (end of right)
  beq moveEnd
@@ -1151,6 +1155,8 @@ right:			;similar as above left subroutine
  rts
 
 up:
+ lda #$0d
+ sta p1_sprite
  lda #space_sprite
  cpy #col_begin
  beq moveEnd
@@ -1167,6 +1173,8 @@ up:
  rts
 
 down:
+ lda #$0c
+ sta p1_sprite
  lda #space_sprite
  cpy #col_end
  beq moveEnd
@@ -1562,6 +1570,7 @@ titleName:
 titleNameEnd
 titleAuthors:
 titleAuthorsEnd
+p1_sprite: dc.b $0b
 theme:		dc.b #165, #180, #131, #158, #185, #145	;these are completely random, so please change if desired!
 themeEnd
 
