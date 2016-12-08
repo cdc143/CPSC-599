@@ -32,7 +32,7 @@
   ;Oct 24, 2016
  processor 6502
  org $1001              ; Unexpanded VIC
- include "header2.h"
+ include "header.h"
 ;ctrl to attack
 
  ; BASIC stub (unexpanded vic)
@@ -50,6 +50,7 @@
 ;########################TITLE PAGE#######################
  ;Change character set
   ldx #$00
+initCharset:
 copyLoop:
  lda leftpose,x
  sta $1c50,x
@@ -64,21 +65,9 @@ copyNums:
  cpx #$50
  bne copyNums
  ldx #$00
-copyHeart:
- ;lda $8298,x
- ;sta $1c88,x
- ;inx
- ;cpx #$08
- ;bne copyHeart
- ;ldx #$00
-;copyPortal:
- ;lda $83f8,x
- ;sta $1c90,x
- ;inx
- ;cpx #$08
- ;bne copyPortal
  lda #$ff
  sta $9005
+
  lda #$55	;green
  sta drawColour
 
@@ -92,42 +81,42 @@ titleScreen:
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
- lda #$09
- sta Scratch2
- lda #$05			;screen coord for title; too lazy to use x,y coords
- sta col
- lda #titleNameEnd-titleName-1	;length
- sta row
-drawTitleLoop:		;draw title to screen
- ldx row
- lda titleName,x
- jsr incIndex
- ldy col
- jsr drawToPlayfield
- dec row		;index -1
- lda row
- cmp #$00
- bpl drawTitleLoop
- lda #$07
- sta Scratch2
- lda #$06		;screen coord for author names
- sta col
- lda #titleAuthorsEnd-titleAuthors-1
- sta row
-drawAuthorLoop:
- ldx row
- ldy col
- lda titleAuthors,x
- jsr incIndex
- jsr drawToPlayfield
- dec row
- lda row
- cmp #$00
- bpl drawAuthorLoop
- lda temp_colour
- sta $900f		 		; store in screen and border register
- lda #$00
- sta Scratch
+ ; lda #$09
+ ; sta Scratch2
+ ; lda #$05			;screen coord for title; too lazy to use x,y coords
+ ; sta col
+ ; lda #titleNameEnd-titleName-1	;length
+ ; sta row
+; drawTitleLoop:		;draw title to screen
+ ; ldx row
+ ; lda titleName,x
+ ; jsr incIndex
+ ; ldy col
+ ; jsr drawToPlayfield
+ ; dec row		;index -1
+ ; lda row
+ ; cmp #$00
+ ; bpl drawTitleLoop
+ ; lda #$07
+ ; sta Scratch2
+ ; lda #$06		;screen coord for author names
+ ; sta col
+ ; lda #titleAuthorsEnd-titleAuthors-1
+ ; sta row
+; drawAuthorLoop:
+ ; ldx row
+ ; ldy col
+ ; lda titleAuthors,x
+ ; jsr incIndex
+ ; jsr drawToPlayfield
+ ; dec row
+ ; lda row
+ ; cmp #$00
+ ; bpl drawAuthorLoop
+ ; lda temp_colour
+ ; sta $900f		 		; store in screen and border register
+ ; lda #$00
+ ; sta Scratch
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr playTheme
  jsr scrColTheme
@@ -751,34 +740,32 @@ initEnemyLocation:
  jsr getRandom	;just gets a random colour for now, change this when have more memory
  and #$07
  sta enemyCount
- lda #$00
+ lda #$0
  sta enemyLoopCount
 initEnemyLoop:
  jsr getRandom
- tax					; number to mod
- ldy #$16			; X mod 22
- jsr mod
- sta enemyX
- jsr getRandom
+ and #$0f
  tax
- ldy #$13			; Y mod 20
- jsr mod
+ jsr getRandom
+ and #$0f
  tay
- ldx enemyX
  jsr getFromScreen
  cmp #space_sprite
  bne initEnemyLoop
  txa
  ldx enemyLoopCount
  sta enemyxpos,x
- sty enemyypos,x
+ pha
+ tya
+ sta enemyypos,x
+ pla
  tax
  lda #enemy_sprite
  jsr drawToPlayfield
  inc enemyLoopCount
  lda enemyLoopCount
  cmp enemyCount
- bmi initEnemyLoop
+ bcc initEnemyLoop
  rts
 quitBounce:
  jmp quit
@@ -816,7 +803,7 @@ initCharsNextLevel:	;this is a branch so it skips over assigning row and col to
  lda char_colour
  sta cur_char_col
  sta drawColour
- lda #p1_sprite		; 'B'
+ lda p1_sprite		; 'B'
  ;jsr drawToScreen
  ldx row
  ldy col
@@ -839,7 +826,7 @@ top:			; top of loop
  ldy col
  lda cur_char_col
  sta drawColour
- lda #p1_sprite
+ lda p1_sprite
  jsr drawToPlayfield
  jsr drawTimer
  jsr EnemyMove
@@ -859,57 +846,81 @@ quit:
  brk			 ; quit
 
 EnemyMove:
+ lda enemyCount
+ sta enemyLoopCount
+EnMove1:
+ ldx enemyLoopCount
+ lda enemyypos,x
+ sta enemyY			; store temp Y value
+ lda enemyxpos,x
+ sta enemyX			; store temp X value
+ jsr clearEnemy
  jsr getRandom
  and #$01
  cmp #$00
  beq CheckX
- lda enemyypos ; else check Y
+ lda enemyypos,x ; else check Y
  cmp col
- beq endMove
  bcc LessY
- jsr clearEnemy
- dec enemyypos
- ldy enemyypos
- ldx enemyxpos
- lda #enemy_sprite
- jsr drawToPlayfield
- rts
+ dec enemyY
+ clc
+ bcc enemyCheckColl
 LessY:
- jsr clearEnemy
- inc enemyypos
- ldy enemyypos
- ldx enemyxpos
- lda #enemy_sprite
- jsr drawToPlayfield
- rts
+ inc enemyY
+ clc
+ bcc enemyCheckColl
 CheckX:
- lda enemyypos ; else check Y
+ ldx enemyLoopCount
+ lda row
+ sta $1000
+ lda enemyypos,x ; else check Y
  cmp row
  bcc LessX
- beq endMove
- jsr clearEnemy
- dec enemyxpos
- ldy enemyypos
- ldx enemyxpos
- lda #enemy_sprite
- jsr drawToPlayfield
- rts
+ dec enemyX
+ clc
+ bcc enemyCheckColl
 LessX:
- jsr clearEnemy
- inc enemyxpos
- ldy enemyypos
- ldx enemyxpos
- lda #enemy_sprite
- jsr drawToPlayfield
- rts
+ inc enemyX
+enemyCheckColl:
+ ldx enemyX
+ ldy enemyY
+ jsr getFromScreen
+ cmp #space_sprite			; check for space
+ bne endMove
+ lda enemyX						; update location
+ ldx enemyLoopCount
+ sta enemyxpos,x
+ lda enemyY
+ sta enemyypos,x
 endMove:
-  rts
-clearEnemy:
- ldy enemyypos
- ldx enemyxpos
+ jsr drawEnemy
+ dec enemyLoopCount
+ lda enemyLoopCount
+ bpl EnMove1
+ rts
+
+clearEnemy:				; clears the enemy from the screen and also gets its colour
+ ldy enemyY
+ ldx enemyX
+ jsr getFromScreen			; to get the enemies colour
+ lda drawColour
+ sta enemyColour		; save enemy colour
  lda #space_sprite
  jsr drawToPlayfield
  rts
+drawEnemy:
+ ldx enemyLoopCount
+ ldy enemyypos,x
+ tya
+ ldy enemyLoopCount
+ ldx enemyxpos,y
+ tay
+ lda enemyColour
+ sta drawColour
+ lda #enemy_sprite
+ jsr drawToPlayfield
+ rts
+
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
@@ -999,9 +1010,9 @@ swordS:
 swordD:
  lda #3
 drawSwordAttack2:
- lda char_colour
- sta drawColour
- jsr drawToPlayfield	;draw to screen
+ ; lda char_colour
+ ; sta drawColour
+ ; jsr drawToPlayfield	;draw to screen
  lda #241				;play sword sound
  jsr SOUNDONLOW
  rts
@@ -1029,6 +1040,7 @@ hitEnemy:
  rts
 
 enemyDead:
+ dec enemyCount
  lda #space_sprite
  jsr drawToPlayfield	;draw spacea and erase enemy
  lda #175				;different sound when enemy is dead
@@ -1116,6 +1128,8 @@ chktimEnd:
 ;if there is something there, return 1 in y
 ;else, return 0 in y
 left:
+ lda #$0a
+ sta p1_sprite
  lda #space_sprite
  cpx #row_begin				; check if end of screen on left
  beq moveEnd
@@ -1129,6 +1143,8 @@ left:
  rts
 
 right:			;similar as above left subroutine
+ lda #$0b
+ sta p1_sprite
  lda #space_sprite
  cpx #row_end		 ; check if x =21 (end of right)
  beq moveEnd
@@ -1142,6 +1158,8 @@ right:			;similar as above left subroutine
  rts
 
 up:
+ lda #$0d
+ sta p1_sprite
  lda #space_sprite
  cpy #col_begin
  beq moveEnd
@@ -1158,6 +1176,8 @@ up:
  rts
 
 down:
+ lda #$0c
+ sta p1_sprite
  lda #space_sprite
  cpy #col_end
  beq moveEnd
@@ -1396,10 +1416,10 @@ loseLifeNext:
 
 increaseScore:
  lda score_ones
- cmp #57
+ cmp #9
  bne incOnes
  inc score_tens
- lda #48
+ lda #0
  sta score_ones
  jsr drawScore
  rts
@@ -1472,6 +1492,9 @@ error: ;shouldn't happen
   brk
   rts
 
+enemyxpos: dc.b 0,0,0,0,0,0,0,0
+enemyypos: dc.b 0,0,0,0,0,0,0,0
+
 level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level1: dc.b $01,$02,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$01
 level2: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
@@ -1523,11 +1546,12 @@ seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-enemyxpos: dc.b 0,0,0,0,0,0,0,0
-enemyypos: dc.b 0,0,0,0,0,0,0,0
+
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
-enemyX				dc.b 0
+enemyX:				dc.b 0
+enemyY:				dc.b 0
+enemyColour:		dc.b 0
 
 ;mod vars
 divisor					dc.b 0
@@ -1545,10 +1569,11 @@ Ycoor: 		 dc.b #$00
 yOffset:      dc.b 0
 tempY:        dc.b 0
 temp1:        dc.b 0
-titleName:		dc.b #02, #15, #15, #16	;boop.  TODO: Better title
+titleName:
 titleNameEnd
-titleAuthors	dc.b #03,#04, #32, #12, #13, #32, #11, #13	;cd lm km
+titleAuthors:
 titleAuthorsEnd
+p1_sprite: dc.b $0b
 theme:		dc.b #165, #180, #131, #158, #185, #145	;these are completely random, so please change if desired!
 themeEnd
 

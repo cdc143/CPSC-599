@@ -1,16 +1,21 @@
 CPSC-599
 CPSC 599 Retrogame Project
 
+Kiersten Mort
+Christian Daniel
+Luc Michaud
+
 Test programs:
 
 To assemble the program do
-dasm game.asm -o[name].prg where [name] is the name you want to give the arg
+dasm game.asm -o[name].prg where [name] is the name you want to give the prg
 
 Then, run the test program by dragging the resulting prg file onto the xvic emulator window, double clicking the prg file, or running xvic [test_name].prg from terminal.
 
 Alternatively, run any of the pre-assembled prg file provided
 
 Controls and Guide:
+Any key will start the game
 Q to slash sword
 WASD to move
 Pick up hearts to restore health
