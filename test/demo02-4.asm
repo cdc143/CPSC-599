@@ -737,9 +737,9 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  jmp titleScreen
 
 initEnemyLocation:
+ lda #$05
  ;jsr getRandom	;just gets a random colour for now, change this when have more memory
- ;and #$07
- lda #$07
+ ;and #$03
  sta enemyCount
  lda #$00
  sta enemyLoopCount
@@ -1041,6 +1041,7 @@ hitEnemy:
  rts
 
 enemyDead:
+ dec enemyCount
  lda #space_sprite
  jsr drawToPlayfield	;draw spacea and erase enemy
  lda #175				;different sound when enemy is dead
