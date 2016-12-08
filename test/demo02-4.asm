@@ -748,23 +748,19 @@ gameOverEnd:	 ; bounce branch to get other subroutines to top of gameLoopTop
  jmp titleScreen
 
 initEnemyLocation:
- jsr getRandom	;just gets a random colour for now, change this when have more memory
- and #$07
+ ;jsr getRandom	;just gets a random colour for now, change this when have more memory
+ ;and #$07
+ lda #$07
  sta enemyCount
  lda #$00
  sta enemyLoopCount
 initEnemyLoop:
  jsr getRandom
- tax					; number to mod
- ldy #$16			; X mod 22
- jsr mod
- sta enemyX
- jsr getRandom
+ and #$0f
  tax
- ldy #$13			; Y mod 20
- jsr mod
+ jsr getRandom
+ and #$0f
  tay
- ldx enemyX
  jsr getFromScreen
  cmp #space_sprite
  bne initEnemyLoop
@@ -781,7 +777,7 @@ initEnemyLoop:
  inc enemyLoopCount
  lda enemyLoopCount
  cmp enemyCount
- bmi initEnemyLoop
+ bne initEnemyLoop
  rts
 quitBounce:
  jmp quit
@@ -875,11 +871,9 @@ EnMove1:
  and #$01
  cmp #$00
  beq CheckX
- ldx enemyLoopCount
  lda enemyypos,x ; else check Y
  cmp col
  bcc LessY
- beq endMove
  dec enemyY
  jmp enemyCheckColl
 LessY:
@@ -887,10 +881,11 @@ LessY:
  jmp enemyCheckColl
 CheckX:
  ldx enemyLoopCount
+ lda row
+ sta $1000
  lda enemyypos,x ; else check Y
  cmp row
  bcc LessX
- beq endMove
  dec enemyX
  jmp enemyCheckColl
 LessX:
@@ -910,10 +905,9 @@ endMove:
  jsr drawEnemy
  dec enemyLoopCount
  lda enemyLoopCount
- cmp #$01
  bpl EnMove1
  rts
- 
+
 clearEnemy:				; clears the enemy from the screen and also gets its colour
  ldy enemyY
  ldx enemyX
@@ -935,7 +929,7 @@ drawEnemy:
  lda #enemy_sprite
  jsr drawToPlayfield
  rts
- 
+
 ; screen registers 1e00-1fff -> 7680-8191 -> 511
 ;INPUT: accumulator: current key
 move:
@@ -1497,6 +1491,9 @@ checkLeft:
 error: ;shouldn't happen
   brk
   rts
+
+enemyxpos: dc.b 0,0,0,0,0,0,0,0
+enemyypos: dc.b 0,0,0,0,0,0,0,0
 
 level0: dc.b $01,$04,$04,$04,$04,$04,$04,$04,$02,$02,$02,$02,$04,$04,$04,$04,$04,$04,$04,$01
 level1: dc.b $01,$02,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$03,$03,$03,$02,$02,$01
