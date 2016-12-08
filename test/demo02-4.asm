@@ -870,6 +870,11 @@ EnMove1:
  sta enemyY			; store temp Y value
  lda enemyxpos,x
  sta enemyX			; store temp X value
+ ldx enemyX
+ ldy enemyY
+ jsr getFromScreen
+ cmp #enemy_sprite			; check for enemy sprite, enemy is dead if there is something else there there
+ bne endMove
  jsr clearEnemy
  jsr getRandom
  and #$01
@@ -1549,8 +1554,6 @@ seed:					dc.b 0 ;store seed for rand number
 current_room:		dc.b 0
 rooms:          dc.b 0,0,0,0,0,0,0,0,0
 room_addr: dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-enemyxpos: dc.b 0,0,0,0,0,0,0,0
-enemyypos: dc.b 0,0,0,0,0,0,0,0
 enemyCount: dc.b 0
 enemyLoopCount: dc.b 0
 enemyX:				dc.b 0
@@ -1590,3 +1593,6 @@ door:     dc.b $81,$42,$24,$18,$18,$24,$42,$81
 portal:   dc.b #240,#240,#240,#240,#15,#15,#15,#15
 sword:    dc.b #24,#24,#24,#24,#24,#00,#24,#24
 heart:    dc.b $36,$7f,$7f,$7f,$3e,$1c,$08,$00
+
+enemyxpos: dc.b 0,0,0,0,0,0,0,0
+enemyypos: dc.b 0,0,0,0,0,0,0,0
