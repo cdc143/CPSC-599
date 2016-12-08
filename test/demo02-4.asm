@@ -862,16 +862,21 @@ quit:
  brk			 ; quit
 
 EnemyMove:
- lda enemyypos
+ lda enemyCount
+ sta enemyLoopCount
+EnMove1:
+ ldx enemyLoopCount
+ lda enemyypos,x
  sta enemyY			; store temp Y value
- lda enemyxpos
+ lda enemyxpos,x
  sta enemyX			; store temp X value
  jsr clearEnemy
  jsr getRandom
  and #$01
  cmp #$00
  beq CheckX
- lda enemyypos ; else check Y
+ ldx enemyLoopCount
+ lda enemyypos,x ; else check Y
  cmp col
  bcc LessY
  beq endMove
@@ -881,7 +886,8 @@ LessY:
  inc enemyY
  jmp enemyCheckColl
 CheckX:
- lda enemyypos ; else check Y
+ ldx enemyLoopCount
+ lda enemyypos,x ; else check Y
  cmp row
  bcc LessX
  beq endMove
@@ -896,12 +902,18 @@ enemyCheckColl:
  cmp #space_sprite			; check for space
  bne endMove
  lda enemyX						; update location
- sta enemyxpos
+ ldx enemyLoopCount
+ sta enemyxpos,x
  lda enemyY
- sta enemyypos
+ sta enemyypos,x
 endMove:
  jsr drawEnemy
+ dec enemyLoopCount
+ lda enemyLoopCount
+ cmp #$01
+ bpl EnMove1
  rts
+ 
 clearEnemy:				; clears the enemy from the screen and also gets its colour
  ldy enemyY
  ldx enemyX
@@ -912,8 +924,12 @@ clearEnemy:				; clears the enemy from the screen and also gets its colour
  jsr drawToPlayfield
  rts
 drawEnemy:
- ldy enemyypos
- ldx enemyxpos
+ ldx enemyLoopCount
+ ldy enemyypos,x
+ tya
+ ldy enemyLoopCount
+ ldx enemyxpos,y
+ tay
  lda enemyColour
  sta drawColour
  lda #enemy_sprite
