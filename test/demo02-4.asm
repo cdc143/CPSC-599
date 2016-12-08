@@ -864,10 +864,12 @@ EnMove1:
  cmp col
  bcc LessY
  dec enemyY
- jmp enemyCheckColl
+ clc
+ bcc enemyCheckColl
 LessY:
  inc enemyY
- jmp enemyCheckColl
+ clc
+ bcc enemyCheckColl
 CheckX:
  ldx enemyLoopCount
  lda row
@@ -876,7 +878,8 @@ CheckX:
  cmp row
  bcc LessX
  dec enemyX
- jmp enemyCheckColl
+ clc
+ bcc enemyCheckColl
 LessX:
  inc enemyX
 enemyCheckColl:
