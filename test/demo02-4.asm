@@ -81,42 +81,42 @@ titleScreen:
  ;jsr levLoadMain 	;load level 3 to screen
  ;lda temp_colour
  ;sta $900f
- lda #$09
- sta Scratch2
- lda #$05			;screen coord for title; too lazy to use x,y coords
- sta col
- lda #titleNameEnd-titleName-1	;length
- sta row
-drawTitleLoop:		;draw title to screen
- ldx row
- lda titleName,x
- jsr incIndex
- ldy col
- jsr drawToPlayfield
- dec row		;index -1
- lda row
- cmp #$00
- bpl drawTitleLoop
- lda #$07
- sta Scratch2
- lda #$06		;screen coord for author names
- sta col
- lda #titleAuthorsEnd-titleAuthors-1
- sta row
-drawAuthorLoop:
- ldx row
- ldy col
- lda titleAuthors,x
- jsr incIndex
- jsr drawToPlayfield
- dec row
- lda row
- cmp #$00
- bpl drawAuthorLoop
- lda temp_colour
- sta $900f		 		; store in screen and border register
- lda #$00
- sta Scratch
+ ; lda #$09
+ ; sta Scratch2
+ ; lda #$05			;screen coord for title; too lazy to use x,y coords
+ ; sta col
+ ; lda #titleNameEnd-titleName-1	;length
+ ; sta row
+; drawTitleLoop:		;draw title to screen
+ ; ldx row
+ ; lda titleName,x
+ ; jsr incIndex
+ ; ldy col
+ ; jsr drawToPlayfield
+ ; dec row		;index -1
+ ; lda row
+ ; cmp #$00
+ ; bpl drawTitleLoop
+ ; lda #$07
+ ; sta Scratch2
+ ; lda #$06		;screen coord for author names
+ ; sta col
+ ; lda #titleAuthorsEnd-titleAuthors-1
+ ; sta row
+; drawAuthorLoop:
+ ; ldx row
+ ; ldy col
+ ; lda titleAuthors,x
+ ; jsr incIndex
+ ; jsr drawToPlayfield
+ ; dec row
+ ; lda row
+ ; cmp #$00
+ ; bpl drawAuthorLoop
+ ; lda temp_colour
+ ; sta $900f		 		; store in screen and border register
+ ; lda #$00
+ ; sta Scratch
 drawTitleAnimation:	;this is a loop because don't need to constantly redraw title names
  jsr playTheme
  jsr scrColTheme
